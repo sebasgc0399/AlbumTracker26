@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
-@theme inline {
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
   --color-background: oklch(1 0 0);
   --color-foreground: oklch(0.15 0 0);
 
@@ -20,6 +22,30 @@
 
   --color-destructive: oklch(0.6 0.22 25);
   --color-destructive-foreground: oklch(1 0 0);
+}
+
+html.dark {
+  --color-background: oklch(0.15 0 0);
+  --color-foreground: oklch(0.95 0 0);
+
+  --color-primary: oklch(0.68 0.2 145);
+  --color-primary-foreground: oklch(1 0 0);
+
+  --color-muted: oklch(0.22 0 0);
+  --color-muted-foreground: oklch(0.65 0 0);
+
+  --color-border: oklch(0.28 0 0);
+
+  --color-success: oklch(0.72 0.2 145);
+  --color-success-foreground: oklch(1 0 0);
+  --color-warning: oklch(0.78 0.16 80);
+  --color-warning-foreground: oklch(0.15 0 0);
+  --color-foil: oklch(0.82 0.14 90);
+
+  --color-destructive: oklch(0.65 0.22 25);
+  --color-destructive-foreground: oklch(1 0 0);
+
+  color-scheme: dark;
 }
 
 @layer base {

@@ -49,7 +49,7 @@ src/
 ├── components/                 # Un componente por archivo
 ├── App.tsx                     # Router + layout
 ├── main.tsx                    # Entry point + db init
-└── index.css                   # Tailwind directives + @theme inline
+└── index.css                   # Tailwind directives + @theme + html.dark overrides
 ```
 
 ## Modelo de datos
@@ -107,7 +107,9 @@ El usuario identifica láminas por **número/ID**, no por nombre del jugador (ig
 
 ### Tailwind v4 CSS-first
 
-- **No existe `tailwind.config.ts`.** Tokens, custom variants y CSS vars van en `src/index.css` con `@theme inline { ... }`. Los docs de Tailwind v3 sobre `tailwind.config.ts` no aplican.
+- **No existe `tailwind.config.ts`.** Tokens, custom variants y CSS vars van en `src/index.css` con `@theme { ... }`. Los docs de Tailwind v3 sobre `tailwind.config.ts` no aplican.
+- **No usar `@theme inline`** salvo que estés seguro: el modificador `inline` baked-in los valores en cada utility class (genera `background-color: oklch(1 0 0)` literal en vez de `var(--color-background)`), por lo que overrides por cascade (ej. `html.dark { --color-background: ... }` para dark mode) NO propagan. F12 ya migró a `@theme` plain — mantenerlo así si querés que los tokens respondan a la clase `.dark`.
+- **Dark mode via clase `.dark` en `<html>`**. F12 declara `@custom-variant dark (&:where(.dark, .dark *))` para utilities `dark:foo`, y un bloque `html.dark { --color-x: ... }` con tokens invertidos en oklch. La clase la aplica `src/lib/theme.ts` + un script pre-paint inline en `index.html` que evita el flash.
 - Mobile-first siempre — el viewport objetivo es ~380px (celular en mano abriendo sobres). Estilos base son mobile, breakpoints solo agregan.
 - No usar `@apply` en componentes; sí en `@layer base` para resets globales.
 
@@ -134,7 +136,7 @@ El usuario identifica láminas por **número/ID**, no por nombre del jugador (ig
 
 Hay 4 MCPs configurados para este proyecto. Úsalos a demanda cuando aporten valor; no son obligatorios.
 
-- **context7** — Antes de escribir código con APIs de Tailwind v4, Dexie, vite-plugin-pwa, React 19, React Router v7. La sintaxis de Tailwind v4 CSS-first y `@theme inline` no está bien cubierta en training data; preferir context7 sobre asunciones.
+- **context7** — Antes de escribir código con APIs de Tailwind v4, Dexie, vite-plugin-pwa, React 19, React Router v7. La sintaxis de Tailwind v4 CSS-first (`@theme`, `@custom-variant`, dark mode con clase) no está bien cubierta en training data; preferir context7 sobre asunciones.
 - **playwright** — Validar el flujo crítico (búsqueda → tap → siguiente) en viewport móvil 380×800. Probar instalabilidad PWA y comportamiento offline tras `npm run build && npm run preview`.
 - **firebase** — Deploy a Firebase Hosting (`firebase_init`, `firebase_get_project`, `firebase_get_sdk_config`). El proyecto NO usa Auth/Firestore/Storage — ignorar esos tools.
 - **chrome-devtools** — Auditorías Lighthouse (`lighthouse_audit`) para validar score PWA, manifest y service worker. Performance traces en mobile cuando el grid de 20 láminas se vea lento.

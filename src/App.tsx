@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import HomePage from '@/pages/HomePage';
 import GroupPage from '@/pages/GroupPage';
@@ -7,9 +8,11 @@ import DuplicatesPage from '@/pages/DuplicatesPage';
 import MissingPage from '@/pages/MissingPage';
 import SharedListPage from '@/pages/SharedListPage';
 import CambiatonPage from '@/pages/CambiatonPage';
+import SettingsPage from '@/pages/SettingsPage';
 import BottomNav from '@/components/BottomNav';
+import { subscribeToSystemTheme } from '@/lib/theme';
 
-const HIDE_NAV_PATHS: readonly string[] = ['/share', '/cambiaton'];
+const HIDE_NAV_PATHS: readonly string[] = ['/share', '/cambiaton', '/settings'];
 
 function ConditionalBottomNav() {
   const location = useLocation();
@@ -18,6 +21,8 @@ function ConditionalBottomNav() {
 }
 
 export default function App() {
+  useEffect(() => subscribeToSystemTheme(), []);
+
   return (
     <BrowserRouter>
       <Routes>
@@ -29,6 +34,7 @@ export default function App() {
         <Route path="/missing" element={<MissingPage />} />
         <Route path="/share" element={<SharedListPage />} />
         <Route path="/cambiaton" element={<CambiatonPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
       </Routes>
       <ConditionalBottomNav />
     </BrowserRouter>

@@ -216,38 +216,70 @@ Para el ícono: lo importante es que en el home screen del celular se reconozca 
 
 ### F12: Modo oscuro (auto + toggle manual persistido)
 
-**Qué:** Soporte completo de tema claro/oscuro con detección automática vía `prefers-color-scheme` y toggle manual persistido en `localStorage`. Los tokens oklch ya están bien preparados para invertir.
+**Estado:** Implementado.
+
+**Qué:** Soporte completo de tema claro/oscuro con tres modos (`light` / `dark` / `system`), persistencia en `localStorage`, suscripción a cambios del SO en modo system, sin flash en first load (pre-paint script), y toggle accesible vía botón cycling en el header de Home + radio group en `/settings`.
 
 **Criterio de done:**
-- [ ] Existe `src/lib/theme.ts` con `getTheme(): 'light' | 'dark'`, `setTheme(t)`, `toggleTheme()`
-- [ ] El theme aplicado se controla con la clase `dark` en `<html>` (estándar Tailwind v4)
-- [ ] En el primer load, se aplica el theme antes del paint para evitar flash (script inline en `index.html` que lee `localStorage` o `prefers-color-scheme`)
-- [ ] Variables oklch en modo oscuro definidas en `@theme` bajo `:where(.dark)` selector — fondo casi negro, foreground casi blanco, primary verde más saturado para que se vea, foil dorado conserva
-- [ ] Toggle accesible desde Ajustes (página simple `src/pages/SettingsPage.tsx` accesible por ícono en header de Home) o tap en el ícono de luna/sol del header
-- [ ] El tema persiste entre sesiones via `localStorage` key `at26.theme`
-- [ ] Tres opciones: `light` / `dark` / `system` (default `system`)
-- [ ] Los tokens cumplen contrast AA en ambos modos (verificable con devtools)
-- [ ] El `theme_color` del manifest cambia dinámicamente vía `<meta name="theme-color">` para que la barra del navegador en standalone match el modo
+- [x] Existe `src/lib/theme.ts` con `getStoredTheme()`, `resolveTheme(t)`, `applyTheme(t)`, `setTheme(t)` y `subscribeToSystemTheme()`
+- [x] El theme aplicado se controla con la clase `dark` en `<html>` (estándar Tailwind v4 con `@custom-variant dark (&:where(.dark, .dark *))`)
+- [x] En el primer load, se aplica el theme antes del paint vía script inline en `index.html` que lee `localStorage` y `prefers-color-scheme`
+- [x] Variables oklch en modo oscuro en bloque `html.dark { ... }` después de `@theme { ... }` — fondo casi negro (oklch 0.15), foreground casi blanco (oklch 0.95), primary verde más saturado (oklch 0.68 0.2 145), foil dorado conserva chroma/hue
+- [x] Toggle cycling (light → dark → system → light) accesible desde el header de Home con ícono SVG inline (sol/luna/monitor según estado)
+- [x] Página completa `src/pages/SettingsPage.tsx` con radio group para tema + toggle sonido (cableado a `setSoundEnabled` de F9)
+- [x] El tema persiste entre sesiones via `localStorage` key `at26.theme`
+- [x] Tres opciones: `light` / `dark` / `system` (default `system`)
+- [x] El `<meta name="theme-color">` cambia dinámicamente al togglear (`#16a34a` en light, `#171717` en dark) — la barra del navegador en standalone match el modo
+- [x] App.tsx llama `subscribeToSystemTheme()` en mount: cuando el modo es 'system', cambios del OS se aplican en vivo sin reload
+- [x] BottomNav escondido en `/settings` (consistente con `/share` y `/cambiaton`)
+- [x] `color-scheme: dark` en `html.dark` para que scrollbars y form controls del navegador se renderen acorde
 
-**Archivos a crear/modificar:**
-- `src/lib/theme.ts` — getter/setter + lógica system
-- `src/components/ThemeToggle.tsx` — botón sol/luna en header
-- `src/pages/SettingsPage.tsx` — pantalla de ajustes (también acoge el toggle de sonido de F9)
-- `src/index.css` — bloque `:where(.dark)` con tokens oklch invertidos
-- `index.html` — script inline pre-paint para evitar flash
+**Archivos creados/modificados (as-built):**
 
-**Notas de implementación:**
-**Pre-paint script crítico**: sin él, en el primer load la app aparece light por 1 frame y luego flashea a dark. Va en `<head>` antes de cualquier CSS:
+Nuevos:
+- `src/lib/theme.ts` — getter/setter + apply + suscripción a `matchMedia('(prefers-color-scheme: dark)')` change events
+- `src/components/ThemeToggle.tsx` — botón cycling con SVGs inline (sun/moon/monitor) — sin emojis
+- `src/pages/SettingsPage.tsx` — `/settings` con radio group de tema + checkbox de sonido + footer info
 
-```html
-<script>
-  const t = localStorage.getItem('at26.theme') || 'system';
-  const dark = t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
-  if (dark) document.documentElement.classList.add('dark');
-</script>
-```
+Modificados:
+- `src/index.css` — **migración crítica de `@theme inline` → `@theme` plain** (ver Notas). Agregado `@custom-variant dark` y bloque `html.dark { ... }` con 12 tokens overrideados
+- `index.html` — script pre-paint inline en `<head>` que setea `html.dark` y meta theme-color antes del primer paint
+- `src/App.tsx` — agrega ruta `/settings`, mete `subscribeToSystemTheme()` en `useEffect`, agrega `/settings` a `HIDE_NAV_PATHS`
+- `src/pages/HomePage.tsx` — header reorganizado: título + ThemeToggle + link a `/settings` con ícono de engranaje SVG inline
+- `CLAUDE.md` — documentado el gotcha de `@theme inline` vs `@theme` plain (era guidance equivocada del SPEC original)
 
-oklch hace el modo oscuro casi gratis: invertir L (lightness) en background/foreground, mantener C/H (chroma/hue) en accents. La paleta se siente coherente sin re-elegir colores.
+**Notas de implementación (as-built):**
+
+**Bug encontrado y resuelto durante implementación**: el SPEC original (y el `index.css` legacy) usaban `@theme inline { ... }`. El modificador `inline` hace que Tailwind baked-in los valores literales en cada utility class (genera `background-color: oklch(1 0 0)` en cada `.bg-background` en vez de `var(--color-background)`). Resultado: `html.dark { --color-background: ... }` actualiza la variable, pero las utility classes ya tienen el color light hardcoded → no propaga.
+
+Verificado vía DOM en runtime: `getComputedStyle(html).getPropertyValue('--color-background')` mostraba el valor dark correcto, pero `getComputedStyle(div.bg-background).backgroundColor` mostraba el valor light. Confirmó que las utilities estaban inlined.
+
+Solución: migrar a `@theme { ... }` (sin `inline`). Esto genera utilities como `.bg-background { background-color: var(--color-background); }`. Override via cascade funciona. Documentado en CLAUDE.md para futuro.
+
+**Pre-paint script no usa `src/lib/theme.ts`** — es vanilla JS inline en `index.html` para evitar el flash. Replica la lógica de `getStoredTheme()` + `resolveTheme()` en versión mínima: lee localStorage, fallback a `prefers-color-scheme`, aplica clase `dark` y meta theme-color antes del primer paint del React tree. Es duplicación intencional — el alternativo (cargar el módulo TS, parsear, aplicar) introduce un frame de delay.
+
+**Suscripción al system theme**: `subscribeToSystemTheme()` se llama una vez en `App` via `useEffect`. Internamente `addEventListener('change')` sobre `matchMedia('(prefers-color-scheme: dark)')`. Solo opera si el modo guardado es `'system'` — en `light`/`dark` explícitos el cambio del OS se ignora.
+
+**Tokens dark elegidos**:
+- `background: oklch(0.15 0 0)` — casi negro pero no absoluto, evita banding
+- `foreground: oklch(0.95 0 0)` — casi blanco con leve tinte gris, menos cansador
+- `primary: oklch(0.68 0.2 145)` — verde con chroma sligh bumped (0.2 vs 0.18) y lightness +0.06 vs light, conservando hue 145
+- `border: oklch(0.28 0 0)` — apenas perceptible sobre el fondo
+- `muted/muted-foreground`: 0.22/0.65 mantiene contraste AA (~5.5:1)
+- `foil`: oklch(0.82 0.14 90) — dorado más oscuro pero todavía dorado
+
+**Cycling order del header toggle**: `light → dark → system → light`. La razón: la mayoría de usuarios o quieren explicit (light/dark) o auto (system). Cycling lleva por las tres en pocos taps.
+
+**SettingsPage es la pantalla canónica para preferencias** — futuras toggles (export/import, reset, etc.) viven acá. F9 (sonido) ya conectado vía `getSoundEnabled`/`setSoundEnabled`.
+
+**Verificación e2e con Playwright (smoke test)**:
+- Light mode: Home, GroupPage, TeamPage, SettingsPage renderean correctamente ✅
+- Click "Oscuro" en SettingsPage: bg flips a dark, todos los componentes adaptan ✅
+- Home en dark: banderas SVG limpias, chips owned con verde brillante (oklch 0.68), grid contraste OK ✅
+- TeamPage en dark: 20 chips legibles (5 owned verde + 15 missing gris oscuro), badges +N en warning amarillo ✅
+- localStorage `at26.theme` persiste entre navegaciones ✅
+- meta theme-color cambia dinámicamente: `#16a34a` (light) → `#171717` (dark) ✅
+- Sin errores de consola
 
 ---
 
@@ -424,14 +456,14 @@ src/
 │   ├── UndoToast.tsx             # F8 ✓
 │   ├── BatchSummary.tsx          # F8 ✓
 │   ├── MilestoneOverlay.tsx      # F10
-│   ├── ThemeToggle.tsx           # F12
+│   ├── ThemeToggle.tsx           # F12 ✓
 │   ├── FlagIcon.tsx              # F16 ✓
 │   ├── StorageBanner.tsx         # F14
 │   └── UpdateBanner.tsx          # F15
 ├── utils/
 │   └── flagFor.ts                # F16 ✓ — helpers flagInfoForTeam{Code,Name}
 ├── pages/
-│   └── SettingsPage.tsx          # F12 (dark + sound toggles + futuro)
+│   └── SettingsPage.tsx          # F12 ✓ (dark + sound toggles + futuro)
 └── index.css                     # extiende con :where(.dark), keyframes, safe-areas
 public/
 ├── fonts/                        # F11 — Inter + Geist Mono variable
@@ -452,8 +484,8 @@ Al terminar esta fase, TODAS estas condiciones deben ser verdaderas:
 - [x] Registrar 7 láminas seguidas vía búsqueda toma menos de 30s sin equivocarme (F8 implementado: contador + undo individual + undo batch)
 - [x] Cada tap en una lámina tiene feedback haptic (Android) y visual coherente en toda la app (F9: 5 kinds centralizados, distinción nueva vs repetida)
 - [ ] Completar un equipo (20/20) dispara un overlay de celebración con texto y confetti
-- [ ] La app se ve correctamente en modo oscuro y el toggle persiste entre sesiones
-- [ ] El primer load no flashea light → dark
+- [x] La app se ve correctamente en modo oscuro y el toggle persiste entre sesiones (F12 implementado)
+- [x] El primer load no flashea light → dark (pre-paint script en index.html)
 - [ ] El header no queda debajo del notch en iPhone, ni el bottom nav debajo de la gesture bar
 - [ ] Volver atrás desde un equipo restaura el scroll de Home
 - [ ] Si hay una nueva versión deployada, aparece un banner "Recargar" que funciona

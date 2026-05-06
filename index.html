@@ -6,6 +6,22 @@
     <meta name="theme-color" content="#16a34a" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <title>AlbumTracker26</title>
+    <script>
+      // Pre-paint theme: avoids light → dark flash on first load.
+      // Mirrors src/lib/theme.ts (getStoredTheme + resolveTheme).
+      (function () {
+        try {
+          var stored = localStorage.getItem('at26.theme');
+          var theme = stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
+          var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) {
+            document.documentElement.classList.add('dark');
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', '#171717');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
