@@ -12,7 +12,8 @@
       "Bash(npm cache *)",
       "Bash(ls \"C:/Users/sebas/AppData/Local/npm-cache/_logs/\" 2>&1 | tail -3)",
       "Read(//c/Users/sebas/AppData/Local/npm-cache/_logs/**)",
-      "Bash(npx -y firebase-tools@15.16.0 mcp --help)"
+      "Bash(npx -y firebase-tools@15.16.0 mcp --help)",
+      "Bash(powershell -Command \"\\(Get-Content 'd:\\\\Proyectos VS CODE\\\\AlbumTracker26\\\\src\\\\data\\\\stickers.json' | Measure-Object -Line\\).Lines\")"
     ]
   },
   "enabledPlugins": {
