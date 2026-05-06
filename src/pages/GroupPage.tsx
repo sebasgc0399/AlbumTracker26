@@ -19,7 +19,7 @@ export default function GroupPage() {
   const teams = TEAMS.filter((team) => team.group === groupId);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background pb-20 text-foreground">
       <header className="sticky top-0 z-10 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto flex max-w-md items-center gap-3">
           <Link
