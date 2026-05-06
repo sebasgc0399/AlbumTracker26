@@ -1,5 +1,7 @@
+import { useNavigate } from 'react-router-dom';
 import { TEAMS } from '@/data/teams';
 import { useCollection, useProgress } from '@/db/hooks';
+import { useLocalStoragePref } from '@/hooks/useLocalStoragePref';
 import GroupCard from '@/components/GroupCard';
 import ProgressBar from '@/components/ProgressBar';
 
@@ -23,6 +25,8 @@ const SPECIAL_SECTIONS: readonly SpecialSection[] = [
 export default function HomePage() {
   const progress = useProgress();
   const collection = useCollection();
+  const navigate = useNavigate();
+  const [nickname, setNickname] = useLocalStoragePref<string>('nickname', '');
 
   return (
     <div className="min-h-screen bg-background pb-20 text-foreground">
@@ -63,6 +67,27 @@ export default function HomePage() {
         </section>
 
         <section className="mb-6">
+          <button
+            type="button"
+            onClick={() => navigate('/cambiaton')}
+            className="flex w-full items-center gap-3 rounded-xl bg-warning px-4 py-4 text-left text-warning-foreground shadow-sm transition-transform active:scale-[0.98]"
+          >
+            <span className="text-3xl leading-none" aria-hidden="true">
+              🔄
+            </span>
+            <div className="flex-1">
+              <h3 className="text-base font-bold">Modo Cambiaton</h3>
+              <p className="text-xs opacity-90">
+                Para intercambiar en vivo cara a cara
+              </p>
+            </div>
+            <span className="text-xl leading-none" aria-hidden="true">
+              →
+            </span>
+          </button>
+        </section>
+
+        <section className="mb-6">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Grupos
           </h2>
@@ -98,6 +123,24 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+        </section>
+
+        <section className="mb-6 rounded-lg border border-border bg-background p-3">
+          <label
+            htmlFor="nickname-input"
+            className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+          >
+            Tu nombre (para compartir listas)
+          </label>
+          <input
+            id="nickname-input"
+            type="text"
+            maxLength={24}
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            placeholder="Sin nombre"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+          />
         </section>
       </main>
     </div>
