@@ -65,4 +65,4 @@ db.version(1).stores({
 
 - `seedDatabase()` se llama desde `main.tsx` antes de `createRoot`, esperando la promesa.
 - Los hooks reactivos requieren import específico: `import { useLiveQuery } from 'dexie-react-hooks'`, no de `dexie`.
-- `useProgress()` debe devolver `{ owned: number; total: 980; duplicates: number }`. **El total es 980, no 992**: las 12 láminas de Coca-Cola son promo extra y NO cuentan en el progreso del set base. `owned` solo suma entries con `count > 0` cuyo sticker tiene `section !== 'cocacola'`. `duplicates` sí incluye CC en su conteo (`sum(count - 1)` para entries con `count > 1`, sin filtrar por sección).
+- `useProgress()` debe devolver `{ owned: number; total: 992; duplicates: number }`. **El total es 992** — todas las láminas que tienen espacio físico en el álbum (incluye las 12 de Coca-Cola). `owned` suma entries con `count > 0` sin filtrar por sección. `duplicates` es `sum(count - 1)` para entries con `count > 1`.

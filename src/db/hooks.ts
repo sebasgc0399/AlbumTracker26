@@ -20,26 +20,18 @@ export function useCollection(): Map<string, CollectionEntry> | undefined {
 
 export interface ProgressSummary {
   owned: number;
-  total: 980;
+  total: 992;
   duplicates: number;
 }
 
 export function useProgress(): ProgressSummary | undefined {
   return useLiveQuery(async () => {
-    const [entries, baseStickerIds] = await Promise.all([
-      db.collection.toArray(),
-      db.stickers
-        .where('section')
-        .notEqual('cocacola')
-        .primaryKeys(),
-    ]);
-
-    const baseSet = new Set(baseStickerIds);
+    const entries = await db.collection.toArray();
 
     let owned = 0;
     let duplicates = 0;
     for (const entry of entries) {
-      if (entry.count > 0 && baseSet.has(entry.stickerId)) {
+      if (entry.count > 0) {
         owned += 1;
       }
       if (entry.count > 1) {
@@ -47,6 +39,6 @@ export function useProgress(): ProgressSummary | undefined {
       }
     }
 
-    return { owned, total: 980, duplicates };
+    return { owned, total: 992, duplicates };
   });
 }
