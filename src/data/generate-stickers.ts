@@ -2,6 +2,7 @@ import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { TEAMS } from "./teams.ts";
+import { PLAYERS } from "./players.ts";
 
 interface Sticker {
   id: string;
@@ -78,9 +79,38 @@ function buildMuseum(): Sticker[] {
   });
 }
 
+// Estructura de página de equipo en el álbum Panini Mundial 2026:
+//   position 1     -> escudo (badge)
+//   position 2-12  -> 11 jugadores (índices 0..10 en PLAYERS[code])
+//   position 13    -> foto de equipo (team_photo)
+//   position 14-20 -> 7 jugadores (índices 11..17 en PLAYERS[code])
+function playerIndexFromPosition(position: number): number {
+  if (position >= 2 && position <= 12) return position - 2;
+  if (position >= 14 && position <= 20) return position - 3;
+  throw new Error(`Posición ${position} no corresponde a un jugador`);
+}
+
 function buildTeams(): Sticker[] {
+  for (const team of TEAMS) {
+    const roster = PLAYERS[team.code];
+    if (!roster) {
+      throw new Error(`Falta roster para ${team.code} en src/data/players.ts`);
+    }
+    if (roster.length !== 18) {
+      throw new Error(
+        `${team.code}: esperado 18 jugadores, hay ${roster.length}`,
+      );
+    }
+    for (const playerName of roster) {
+      if (!playerName.trim()) {
+        throw new Error(`${team.code}: nombre vacío detectado en roster`);
+      }
+    }
+  }
+
   const result: Sticker[] = [];
   for (const team of TEAMS) {
+    const roster = PLAYERS[team.code]!;
     for (let position = 1; position <= 20; position++) {
       const id = `${team.code}${position}`;
       let name: string;
@@ -88,11 +118,11 @@ function buildTeams(): Sticker[] {
       if (position === 1) {
         name = `Escudo ${team.name}`;
         type = "badge";
-      } else if (position === 2) {
+      } else if (position === 13) {
         name = `Foto de equipo ${team.name}`;
         type = "team_photo";
       } else {
-        name = `Jugador ${position - 2}`;
+        name = roster[playerIndexFromPosition(position)];
         type = "player";
       }
       result.push({

@@ -13,6 +13,19 @@ const MAX_VISIBLE = 8;
 const FLASH_MS = 220;
 const SOBRE_TARGET = 7;
 
+// Letras base distintas (no diacríticos combinables) que normalize('NFD') no descompone.
+// Necesario para buscar "odegaard" → "Ødegaard", "yamal" → "Yamal", etc.
+const BASE_LETTER_MAP: Record<string, string> = {
+  ø: 'o', æ: 'ae', å: 'a', ß: 'ss', đ: 'd', ł: 'l',
+};
+
+const normalize = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[øæåßđł]/g, (ch) => BASE_LETTER_MAP[ch] ?? ch)
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '');
+
 export default function SearchPage() {
   const stickers = useStickers();
   const collection = useCollection();
@@ -45,9 +58,11 @@ export default function SearchPage() {
   const trimmed = query.trim();
   const matches = useMemo<Sticker[]>(() => {
     if (!sortedStickers || trimmed.length === 0) return [];
-    const upper = trimmed.toUpperCase();
-    return sortedStickers.filter((sticker) =>
-      sticker.id.toUpperCase().includes(upper),
+    const needle = normalize(trimmed);
+    return sortedStickers.filter(
+      (sticker) =>
+        sticker.id.toLowerCase().includes(needle) ||
+        normalize(sticker.name).includes(needle),
     );
   }, [sortedStickers, trimmed]);
 
@@ -78,7 +93,7 @@ export default function SearchPage() {
         <div className="mx-auto max-w-md">
           <h1 className="text-xl font-bold text-foreground">Buscar lámina</h1>
           <p className="text-xs text-muted-foreground">
-            Tipeá el código y tocá para sumarla
+            Tipeá el código o el nombre y tocá para sumarla
           </p>
           <div className="mt-3">
             <label htmlFor="sticker-search" className="sr-only">
@@ -90,14 +105,13 @@ export default function SearchPage() {
               type="text"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="COL7, ARG12, FWC3..."
+              placeholder="COL7, Messi, Mbappé..."
               inputMode="text"
-              autoCapitalize="characters"
               autoCorrect="off"
               autoComplete="off"
               spellCheck={false}
               autoFocus
-              className="w-full rounded-lg border border-border bg-background px-4 py-3 font-mono text-base uppercase tracking-wide text-foreground placeholder:font-sans placeholder:normal-case placeholder:tracking-normal placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
+              className="w-full rounded-lg border border-border bg-background px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
           </div>
           {showCounter && (
@@ -129,8 +143,8 @@ export default function SearchPage() {
         ) : trimmed.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-background p-6 text-center">
             <p className="text-sm text-muted-foreground">
-              Escribí el código de la lámina (ej. COL7, ARG12, FWC3) para
-              marcarla.
+              Escribí el código (ej. COL7) o el nombre del jugador (ej. Messi)
+              para marcarla.
             </p>
           </div>
         ) : matches.length === 0 ? (

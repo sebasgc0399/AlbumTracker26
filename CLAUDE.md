@@ -158,3 +158,45 @@ Configuración en [.mcp.json](.mcp.json) (project-scoped) y heredada de user sco
 Es un proyecto personal de fin de semana, no enterprise. Las decisiones priorizan **velocidad de uso al abrir un sobre** sobre cualquier otra cosa: el flujo crítico es búsqueda → tap → siguiente. Cualquier feature que añada fricción a ese loop (login, sync remoto, confirmaciones modales) necesita justificación explícita.
 
 Si una feature parece overkill para "1 usuario, 1 álbum, 1 fin de semana de dev", probablemente lo es.
+
+## Nombres de jugadores: pendientes de re-verificar
+
+La fuente de los 864 nombres en [src/data/players.ts](src/data/players.ts) es una mezcla de la app oficial Panini (que el usuario me pasó por capturas) y correcciones del jugador real conocido cuando la app tenía typos OCR claros. Hay sospechas concretas de typos OCR donde mi versión difiere de la app — el árbitro final es el álbum físico impreso. Cuando el usuario pegue la lámina o pueda comparar, validamos cada uno y sacamos el item de esta lista.
+
+Formato: `{ID}: "{lo que tengo guardado}" — sospecha "{alternativa}"`
+
+- [ ] **AUS18**: "Kusini Yengi" — sospecha "Kusini Vengi" (la app dice Vengi, mi versión asume Y por jugador real)
+- [ ] **AUT7**: "Stefan Posch" — sospecha "Stefan Bosch" (la app dice Bosch, mi versión asume P)
+- [ ] **AUT10**: "Xaver Schlager" — sospecha "Xavier Schlager" (la app dice Xavier)
+- [ ] **BEL9**: "Youri Tielemans" — sospecha "Youri Tieleman" (la app dice sin S)
+- [ ] **ARG12**: "Leandro Paredes" — sospecha "Leonardo Paredes" (la app dice Leonardo)
+- [ ] **BRA15**: "Rodrygo" — sospecha "Rodrigo" (la app dice Rodrigo, mi versión usa Y por nombre artístico)
+- [ ] **CRO19**: "Andrej Kramarić" — sospecha "Andrej Krsmarić" (la app dice Krsmaric)
+- [ ] **ECU14**: "John Yeboah" — sospecha "John Vebuah" (la app dice Vebuah)
+- [ ] **GHA17**: "André Ayew" — la app mostraba "Andrew aYEW" (typo OCR claro, pero confirmar el acento del álbum)
+- [ ] **GHA19**: "Osman Buhari" — sospecha "Osman Bukari" (la app dice Buhari, mi instinto dice Bukari, real conocido)
+- [ ] **JPN3**: "Henry Heroki Mochizuki" — la app cortaba a "Henry Heroki" (verificar si el álbum lleva el apellido completo)
+- [ ] **USA15**: "Malik Tillman" — sospecha "Malim Tillman" (la app dice Malim)
+- [ ] **POR8**: "Gonçalo Inácio" — la app dice "Gonzalo Inacio" (verificar tildes y Ç vs Z)
+- [ ] **POR18**: "Gonçalo Ramos" — la app dice "Gonzalo Ramos" (mismo)
+- [ ] **EGY20**: "Omar Marmoush" — la app dice "Omar Marsmoush" (verificar)
+- [ ] **CUW7**: "Shurandy Sambo" — la app dice "Shurandy Shambo"
+- [ ] **CUW9**: "Godfried Roemeratoe" — la app dice "Godfriend"
+- [ ] **MAR7**: "Jawad El Yamiq" — la app dice "Jawad El Yamio"
+- [ ] **MAR20**: "Ayoub El Kaabi" — la app dice "Ayoub El Kasbi"
+- [ ] **PAN8**: "César Blackman" — la app dice "Cesar Bllackman" (doble L sospechosa)
+- [ ] **PAN14**: "Ismael Díaz" — la app dice "Ismael dlAZ" (OCR severo)
+- [ ] **PAN17**: "José Luis Rodríguez" — la app dice "Jose Luiz Rodriguez" (verificar Luis vs Luiz)
+- [ ] **SEN16**: "Iliman Ndiaye" — la app dice "Liman Ndiaye"
+- [ ] **SCO18**: "Lyndon Dykes" — la app dice "Lyndon Dykus" en una vista y "Dykes" en otra
+- [ ] **SCO20**: "Ben Cannon Doak" — verificar (el real es solo "Ben Doak")
+- [ ] **SWE14**: "Roony Bardghi" — la app dice "Roony Bardhji"
+- [ ] **SWE20**: "Viktor Gyökeres" — la app dice "Viktor Cyokeres" (typo OCR claro, confirmar diéresis del álbum)
+- [ ] **KOR**: confirmar orden — quedó como "given-name family-name" (Heung-min Son), no Korean style (Son Heung-min)
+- [ ] **CZE**: confirmar todos los háčeks (Matěj Kovář, Tomáš Souček, Václav Černý, etc.) — la app no los muestra
+- [ ] **TUR**: confirmar diacríticos turcos (Çakır, Çağlar, Çalhanoğlu, etc.) — la app no los muestra
+- [ ] **NOR**: confirmar letras nórdicas (Ørjan, Ødegaard, Sørloth, Møller) — la app no las muestra
+
+Procedimiento: el usuario va pegando láminas o consulta el álbum, manda captura/foto del sticker físico con código visible, yo (o futura sesión) compara contra `players.ts` y, si coincide o se corrige, sacamos el item de esta lista. Si todos quedan limpios, esta sección entera se borra.
+
+Slot oficial sin nombre asignado por Panini (no es duda — confirmado): **ALG15** = "Por confirmar".
