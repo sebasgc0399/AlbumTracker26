@@ -13,6 +13,16 @@ export function useStickers(team?: string): Sticker[] | undefined {
   );
 }
 
+// Filtra por `section` (intro | museum | cocacola | team). Necesario porque
+// las secciones intro y museum comparten team='FWC' — useStickers('FWC')
+// devolvería las 20 mezcladas.
+export function useStickersBySection(section: string): Sticker[] | undefined {
+  return useLiveQuery(
+    () => db.stickers.where('section').equals(section).toArray(),
+    [section],
+  );
+}
+
 export function useCollection(): Map<string, CollectionEntry> | undefined {
   return useLiveQuery(async () => {
     const entries = await db.collection.toArray();

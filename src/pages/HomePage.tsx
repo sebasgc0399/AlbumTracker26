@@ -13,14 +13,22 @@ const GROUP_IDS = Array.from(
 interface SpecialSection {
   id: string;
   name: string;
-  count: number;
   description: string;
+  // IDs de las láminas en esta sección. Coincide con el catálogo (stickers.json):
+  // intro=FWC1..FWC9, museum=FWC10..FWC20, cocacola=CC1..CC14.
+  stickerIds: readonly string[];
+}
+
+function range(prefix: string, from: number, to: number): string[] {
+  const out: string[] = [];
+  for (let i = from; i <= to; i += 1) out.push(`${prefix}${i}`);
+  return out;
 }
 
 const SPECIAL_SECTIONS: readonly SpecialSection[] = [
-  { id: 'intro', name: 'Introducción', count: 9, description: '9 láminas' },
-  { id: 'museum', name: 'Museo FIFA', count: 11, description: '11 láminas' },
-  { id: 'cocacola', name: 'Coca-Cola', count: 14, description: '14 láminas (promo)' },
+  { id: 'intro', name: 'Introducción', description: '9 láminas', stickerIds: range('FWC', 1, 9) },
+  { id: 'museum', name: 'Museo FIFA', description: '11 láminas', stickerIds: range('FWC', 10, 20) },
+  { id: 'cocacola', name: 'Coca-Cola', description: '14 láminas (promo)', stickerIds: range('CC', 1, 14) },
 ];
 
 export default function HomePage() {
@@ -132,21 +140,38 @@ export default function HomePage() {
             Especiales
           </h2>
           <div className="grid grid-cols-1 gap-2">
-            {SPECIAL_SECTIONS.map((section) => (
-              <div
-                key={section.id}
-                className="rounded-lg border border-border bg-background p-3"
-              >
-                <div className="flex items-baseline justify-between">
-                  <h3 className="text-base font-semibold text-foreground">
-                    {section.name}
-                  </h3>
-                  <span className="text-xs text-muted-foreground">
-                    {section.description}
-                  </span>
-                </div>
-              </div>
-            ))}
+            {SPECIAL_SECTIONS.map((section) => {
+              const total = section.stickerIds.length;
+              let owned = 0;
+              if (collection) {
+                for (const id of section.stickerIds) {
+                  const entry = collection.get(id);
+                  if (entry && entry.count > 0) owned += 1;
+                }
+              }
+              return (
+                <Link
+                  key={section.id}
+                  to={`/special/${section.id}`}
+                  className="block rounded-lg border border-border bg-background p-3 transition-colors active:bg-muted"
+                >
+                  <div className="mb-2 flex items-baseline justify-between gap-2">
+                    <h3 className="text-base font-semibold text-foreground">
+                      {section.name}
+                    </h3>
+                    <div className="flex shrink-0 items-baseline gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {section.description}
+                      </span>
+                      <span className="text-xs tabular-nums text-muted-foreground">
+                        {owned}/{total}
+                      </span>
+                    </div>
+                  </div>
+                  <ProgressBar value={owned} max={total} />
+                </Link>
+              );
+            })}
           </div>
         </section>
 

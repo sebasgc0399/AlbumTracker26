@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import HomePage from '@/pages/HomePage';
 import GroupPage from '@/pages/GroupPage';
 import TeamPage from '@/pages/TeamPage';
+import SpecialPage from '@/pages/SpecialPage';
 import SearchPage from '@/pages/SearchPage';
 import DuplicatesPage from '@/pages/DuplicatesPage';
 import MissingPage from '@/pages/MissingPage';
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/group/:groupId" element={<GroupPage />} />
           <Route path="/team/:teamCode" element={<TeamPage />} />
+          <Route path="/special/:sectionId" element={<SpecialPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/duplicates" element={<DuplicatesPage />} />
           <Route path="/missing" element={<MissingPage />} />
