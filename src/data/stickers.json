@@ -1,8 +1,19 @@
 [
   {
+    "id": "00",
+    "number": "00",
+    "name": "Panini",
+    "team": "",
+    "teamName": "Introducción",
+    "group": "special",
+    "section": "intro",
+    "type": "special",
+    "position": 0
+  },
+  {
     "id": "FWC1",
     "number": "FWC1",
-    "name": "Logo FIFA World Cup 26",
+    "name": "Emblema Oficial",
     "team": "FWC",
     "teamName": "Introducción",
     "group": "special",
@@ -13,7 +24,7 @@
   {
     "id": "FWC2",
     "number": "FWC2",
-    "name": "Trofeo Mundial",
+    "name": "Emblema Oficial",
     "team": "FWC",
     "teamName": "Introducción",
     "group": "special",
@@ -24,7 +35,7 @@
   {
     "id": "FWC3",
     "number": "FWC3",
-    "name": "Mascota Oficial Maple",
+    "name": "Mascotas Oficiales",
     "team": "FWC",
     "teamName": "Introducción",
     "group": "special",
@@ -35,7 +46,7 @@
   {
     "id": "FWC4",
     "number": "FWC4",
-    "name": "Mascota Oficial Zayu",
+    "name": "Eslogan Oficial",
     "team": "FWC",
     "teamName": "Introducción",
     "group": "special",
@@ -46,7 +57,7 @@
   {
     "id": "FWC5",
     "number": "FWC5",
-    "name": "Mascota Oficial Clutch",
+    "name": "Balón Oficial Trionda",
     "team": "FWC",
     "teamName": "Introducción",
     "group": "special",
@@ -57,7 +68,7 @@
   {
     "id": "FWC6",
     "number": "FWC6",
-    "name": "Balón Oficial",
+    "name": "Anfitrión Canadá",
     "team": "FWC",
     "teamName": "Introducción",
     "group": "special",
@@ -68,7 +79,7 @@
   {
     "id": "FWC7",
     "number": "FWC7",
-    "name": "Sedes Estados Unidos",
+    "name": "Anfitrión México",
     "team": "FWC",
     "teamName": "Introducción",
     "group": "special",
@@ -79,24 +90,13 @@
   {
     "id": "FWC8",
     "number": "FWC8",
-    "name": "Sedes México",
+    "name": "Anfitrión Estados Unidos",
     "team": "FWC",
     "teamName": "Introducción",
     "group": "special",
     "section": "intro",
     "type": "special",
     "position": 8
-  },
-  {
-    "id": "FWC9",
-    "number": "FWC9",
-    "name": "Sedes Canadá",
-    "team": "FWC",
-    "teamName": "Introducción",
-    "group": "special",
-    "section": "intro",
-    "type": "special",
-    "position": 9
   },
   {
     "id": "FWC10",

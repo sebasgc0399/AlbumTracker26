@@ -16,16 +16,34 @@ interface Sticker {
   position: number;
 }
 
-const INTRO_NAMES: readonly string[] = [
-  "Logo FIFA World Cup 26",
-  "Trofeo Mundial",
-  "Mascota Oficial Maple",
-  "Mascota Oficial Zayu",
-  "Mascota Oficial Clutch",
-  "Balón Oficial",
-  "Sedes Estados Unidos",
-  "Sedes México",
-  "Sedes Canadá",
+// Sección Introducción del álbum Panini Mundial 2026 (edición Colombia).
+// Confirmado contra fotos del álbum físico + listado de la app oficial Panini.
+//
+// El álbum tiene 9 láminas en intro, organizadas así:
+//   - Slot "00": etiqueta física "00" (sin prefijo "FWC") — sticker "Panini" de marca.
+//     Se modela con id "00", team "" (vacío), para que la chip lo muestre como "00"
+//     y no como "FWC 0" o similar.
+//   - Slots FWC1..FWC8: las 8 láminas con prefijo "FWC" en el álbum.
+//
+// Notar que NO existe FWC9 en el álbum físico — la SPEC inicial asumió 9
+// FWCs y eso era incorrecto. Las 3 mascotas (Maple/Zayu/Clutch) son UNA sola
+// lámina ("Mascotas Oficiales"), no tres.
+interface IntroSlot {
+  id: string; // p.ej. "00", "FWC1"
+  team: string; // "" para 00, "FWC" para el resto
+  name: string;
+}
+
+const INTRO_SLOTS: readonly IntroSlot[] = [
+  { id: "00", team: "", name: "Panini" },
+  { id: "FWC1", team: "FWC", name: "Emblema Oficial" },
+  { id: "FWC2", team: "FWC", name: "Emblema Oficial" },
+  { id: "FWC3", team: "FWC", name: "Mascotas Oficiales" },
+  { id: "FWC4", team: "FWC", name: "Eslogan Oficial" },
+  { id: "FWC5", team: "FWC", name: "Balón Oficial Trionda" },
+  { id: "FWC6", team: "FWC", name: "Anfitrión Canadá" },
+  { id: "FWC7", team: "FWC", name: "Anfitrión México" },
+  { id: "FWC8", team: "FWC", name: "Anfitrión Estados Unidos" },
 ];
 
 const MUSEUM_NAMES: readonly string[] = [
@@ -43,21 +61,20 @@ const MUSEUM_NAMES: readonly string[] = [
 ];
 
 function buildIntro(): Sticker[] {
-  return INTRO_NAMES.map((name, idx) => {
-    const position = idx + 1;
-    const id = `FWC${position}`;
-    return {
-      id,
-      number: id,
-      name,
-      team: "FWC",
-      teamName: "Introducción",
-      group: "special",
-      section: "intro",
-      type: "special",
-      position,
-    };
-  });
+  // position empieza en 0 para que la lámina "00" ordene primero en el grid.
+  // El número impreso del álbum se deriva del id menos el prefijo team
+  // (StickerChip.tsx hace ese cómputo en runtime).
+  return INTRO_SLOTS.map((slot, idx) => ({
+    id: slot.id,
+    number: slot.id,
+    name: slot.name,
+    team: slot.team,
+    teamName: "Introducción",
+    group: "special",
+    section: "intro",
+    type: "special",
+    position: idx,
+  }));
 }
 
 function buildMuseum(): Sticker[] {

@@ -63,7 +63,7 @@ Dos tablas Dexie. La separación es deliberada: permite re-seedear el catálogo 
 
 ```typescript
 interface Sticker {
-  id: string;        // "COL7", "FWC1", "CC3"
+  id: string;        // "COL7", "FWC1", "CC3", "00" (caso especial)
   number: string;    // Display (== id en este álbum)
   name: string;      // "James Rodríguez" o "Jugador 7" (placeholder v1)
   team: string;      // "COL", "FWC", "CC"
@@ -83,7 +83,7 @@ interface CollectionEntry {
 
 ### Composición de las 994 láminas
 
-- **9** intro (`FWC1`–`FWC9`)
+- **9** intro: 1 "Panini" (`00`, sin prefijo FWC, etiqueta única en el álbum) + 8 FIFA World Cup (`FWC1`–`FWC8`: 2 Emblemas Oficiales + Mascotas + Eslogan + Balón Trionda + 3 Anfitriones CAN/MEX/USA)
 - **11** museo FIFA (`FWC10`–`FWC20`)
 - **960** equipos: 48 países × 20 láminas (1 escudo foil + 1 foto equipo + 18 jugadores), IDs `{COUNTRY_CODE}{1-20}` (ej. `ARG1`, `COL7`)
 - **14** Coca-Cola promo (`CC1`–`CC14`) — confirmado contra el álbum físico edición Colombia

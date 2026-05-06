@@ -49,6 +49,16 @@ export default function StickerChip({
             ? 'ring-1 ring-accent-museum/40'
             : 'border border-border';
 
+  // Display tal cual aparece impreso en el álbum: "ARG 1", "FWC 10", "CC 14",
+  // y para la lámina especial "00" (Panini) sin prefijo, solo "00".
+  // Antes mostrábamos `position` que era "1..N" relativo a la sección — eso
+  // funcionaba en grids de equipo pero rompía en museo (chips decían 1..11
+  // mientras el álbum dice FWC10..FWC20).
+  const showsTeamPrefix = sticker.team !== '' && sticker.id.startsWith(sticker.team);
+  const displayNumber = showsTeamPrefix
+    ? sticker.id.slice(sticker.team.length)
+    : sticker.id;
+
   return (
     <button
       type="button"
@@ -58,8 +68,10 @@ export default function StickerChip({
       className={`relative flex aspect-square items-center justify-center rounded-lg p-1 text-center transition-colors active:scale-95 ${stateClasses} ${typeClasses}`}
     >
       <div className="flex flex-col items-center justify-center leading-tight">
-        <span className="font-mono text-[0.6rem] font-medium opacity-70">{sticker.team}</span>
-        <span className="font-mono text-lg font-bold tabular-nums">{sticker.position}</span>
+        {showsTeamPrefix && (
+          <span className="font-mono text-[0.6rem] font-medium opacity-70">{sticker.team}</span>
+        )}
+        <span className="font-mono text-lg font-bold tabular-nums">{displayNumber}</span>
       </div>
 
       {isFoil && !isDimmedByFilter && (

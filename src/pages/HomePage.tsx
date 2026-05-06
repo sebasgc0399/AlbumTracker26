@@ -26,7 +26,8 @@ function range(prefix: string, from: number, to: number): string[] {
 }
 
 const SPECIAL_SECTIONS: readonly SpecialSection[] = [
-  { id: 'intro', name: 'Introducción', description: '9 láminas', stickerIds: range('FWC', 1, 9) },
+  // Intro = 1 lámina "00" (Panini, sin prefijo FWC) + FWC1..FWC8.
+  { id: 'intro', name: 'Introducción', description: '9 láminas', stickerIds: ['00', ...range('FWC', 1, 8)] },
   { id: 'museum', name: 'Museo FIFA', description: '11 láminas', stickerIds: range('FWC', 10, 20) },
   { id: 'cocacola', name: 'Coca-Cola', description: '14 láminas (promo)', stickerIds: range('CC', 1, 14) },
 ];

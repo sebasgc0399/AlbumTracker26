@@ -20,7 +20,7 @@ Al terminar esta fase, el usuario puede abrir la app en su celular (instalada co
 **Qué:** Archivo JSON estático con la metadata de las 994 láminas del álbum (980 set base FIFA + 14 promo Coca-Cola), organizado por sección y equipo. Este archivo se genera una vez y se incluye en el bundle de la app. Al abrir la app por primera vez, las láminas se cargan en IndexedDB vía Dexie.
 
 **Estructura del álbum (994 láminas):**
-- **Introducción:** 9 láminas (logo FIFA, trofeo, mascota, logo del torneo, sedes, etc.) — IDs: FWC1–FWC9
+- **Introducción:** 9 láminas — 1 "Panini" (id `00`, sin prefijo FWC) + 8 FIFA World Cup (FWC1–FWC8: 2 Emblemas Oficiales, Mascotas Oficiales, Eslogan Oficial, Balón Trionda, Anfitrión Canadá/México/Estados Unidos)
 - **FIFA Museum (Historia):** 11 láminas de campeones históricos — IDs: FWC10–FWC20
 - **48 Equipos × 20 láminas cada uno = 960 láminas:**
   - 1 escudo del equipo (tipo: `badge`, foil)

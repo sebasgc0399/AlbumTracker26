@@ -81,3 +81,26 @@ db.version(4)
     await stickersTable.clear();
     await stickersTable.bulkAdd(stickersData as Sticker[]);
   });
+
+// Versión 5: catálogo intro corregido — los nombres FWC1..FWC9 que la SPEC
+// había asumido ("Logo FIFA", "Trofeo", 3 mascotas separadas, 3 sedes) no
+// matcheaban el álbum físico ni la app oficial Panini. La intro real son 9
+// láminas: una etiquetada "00" (Panini de marca, sin prefijo FWC) + FWC1..FWC8
+// (Emblemas, Mascotas como un solo sticker, Eslogan, Balón Trionda, Anfitrión
+// CAN/MEX/USA). Total del álbum sigue en 994.
+//
+// Misma estrategia que v3/v4: re-seedear `stickers`. La tabla `collection`
+// queda intacta — los IDs FWC3..FWC9 cambian de significado (entries existentes
+// quedan asociadas a stickers con nombres distintos) y FWC9 desaparece (entries
+// huérfanas, no aparecen en UI). Aceptable porque los nombres anteriores eran
+// incorrectos: el progreso anterior en intro era ya semánticamente inválido.
+db.version(5)
+  .stores({
+    stickers: 'id, team, group, section, type',
+    collection: 'stickerId',
+  })
+  .upgrade(async (tx) => {
+    const stickersTable = tx.table<Sticker>('stickers');
+    await stickersTable.clear();
+    await stickersTable.bulkAdd(stickersData as Sticker[]);
+  });

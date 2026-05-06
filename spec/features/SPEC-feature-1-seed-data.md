@@ -11,7 +11,7 @@ Archivo JSON estático con la metadata de las 994 láminas del álbum, organizad
 
 | Sección       | Cantidad | IDs                           |
 | ------------- | -------- | ----------------------------- |
-| Introducción  | 9        | `FWC1`–`FWC9`                 |
+| Introducción  | 9        | `00`, `FWC1`–`FWC8`           |
 | FIFA Museum   | 11       | `FWC10`–`FWC20`               |
 | Equipos × 48  | 960      | `{COUNTRY}{1-20}` (ej. `COL7`) |
 | Coca-Cola     | 14       | `CC1`–`CC14`                  |
