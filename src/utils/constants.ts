@@ -1,0 +1,5 @@
+export const ALMOST_COMPLETE_THRESHOLD = 3;
+
+export const MAX_SHARE_PAYLOAD_BYTES = 1900;
+
+export const MAX_DUPLICATE_COUNT = 20;

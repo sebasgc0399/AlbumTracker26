@@ -27,3 +27,16 @@ db.version(1).stores({
   stickers: 'id, team, group, section, type',
   collection: 'stickerId',
 });
+
+db.version(2)
+  .stores({
+    stickers: 'id, team, group, section, type',
+    collection: 'stickerId',
+  })
+  .upgrade(async (tx) => {
+    await tx
+      .table('stickers')
+      .where('section')
+      .equals('museum')
+      .modify({ teamName: 'Museo FIFA' });
+  });

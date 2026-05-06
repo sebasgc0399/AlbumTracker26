@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
+import { db } from '@/db/database';
 import { seedDatabase } from '@/db/seed';
 
 const rootElement = document.getElementById('root')!;
@@ -11,7 +12,8 @@ const loadingTimer = window.setTimeout(() => {
   rootElement.textContent = 'Cargando catálogo...';
 }, 250);
 
-seedDatabase()
+db.open()
+  .then(() => seedDatabase())
   .catch((error) => {
     console.error('Error al inicializar la base de datos:', error);
   })
