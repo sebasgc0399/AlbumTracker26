@@ -7,6 +7,8 @@ import {
   downloadBackup,
   parseBackup,
   importCollection,
+  markAllOwned,
+  resetCollection,
   type BackupFile,
 } from '@/lib/safety';
 import InfoToast, { type InfoToastMessage } from '@/components/InfoToast';
@@ -23,11 +25,14 @@ interface PendingImport {
   ownedEntries: number;
 }
 
+type BulkAction = 'mark-all' | 'reset';
+
 export default function SettingsPage() {
   const [theme, setThemeState] = useState<Theme>('system');
   const [sound, setSoundState] = useState<boolean>(false);
   const [toast, setToast] = useState<InfoToastMessage | null>(null);
   const [pending, setPending] = useState<PendingImport | null>(null);
+  const [pendingBulk, setPendingBulk] = useState<BulkAction | null>(null);
   const [busy, setBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const toastIdRef = useRef(0);
@@ -100,6 +105,29 @@ export default function SettingsPage() {
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Error desconocido';
       showToast(`Error al importar: ${msg}`, 'destructive');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function runBulk() {
+    if (!pendingBulk || busy) return;
+    setBusy(true);
+    try {
+      if (pendingBulk === 'mark-all') {
+        const result = await markAllOwned();
+        showToast(
+          `Listo · ${result.added} marcadas (${result.alreadyOwned} ya tenías)`,
+          'success',
+        );
+      } else {
+        const result = await resetCollection();
+        showToast(`Progreso vaciado · ${result.cleared} entradas borradas`, 'success');
+      }
+      setPendingBulk(null);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Error desconocido';
+      showToast(`Error: ${msg}`, 'destructive');
     } finally {
       setBusy(false);
     }
@@ -227,6 +255,34 @@ export default function SettingsPage() {
           </div>
         </section>
 
+        <section className="mb-6">
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Acciones rápidas
+          </h2>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => setPendingBulk('mark-all')}
+              disabled={busy}
+              className="min-h-11 rounded-lg border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground transition-colors active:bg-muted disabled:opacity-60"
+            >
+              Marcar todas como completadas
+            </button>
+            <button
+              type="button"
+              onClick={() => setPendingBulk('reset')}
+              disabled={busy}
+              className="min-h-11 rounded-lg border border-destructive/40 bg-background px-4 py-3 text-sm font-semibold text-destructive transition-colors active:bg-destructive/10 disabled:opacity-60"
+            >
+              Vaciar todo el progreso
+            </button>
+            <p className="px-1 text-xs text-muted-foreground">
+              Marcar pone count=1 a las láminas sin marcar (preserva las repetidas).
+              Vaciar borra todo el progreso de este dispositivo.
+            </p>
+          </div>
+        </section>
+
         <section className="rounded-lg border border-border bg-muted/40 p-3">
           <p className="text-xs text-muted-foreground">
             AlbumTracker26 — todo se guarda en este dispositivo, sin backend.
@@ -245,6 +301,76 @@ export default function SettingsPage() {
           onReplace={() => runImport('replace')}
         />
       )}
+
+      {pendingBulk && (
+        <BulkConfirmDialog
+          action={pendingBulk}
+          busy={busy}
+          onCancel={() => setPendingBulk(null)}
+          onConfirm={runBulk}
+        />
+      )}
+    </div>
+  );
+}
+
+interface BulkConfirmDialogProps {
+  action: BulkAction;
+  busy: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+function BulkConfirmDialog({
+  action,
+  busy,
+  onCancel,
+  onConfirm,
+}: BulkConfirmDialogProps) {
+  const isReset = action === 'reset';
+  const title = isReset ? 'Vaciar todo el progreso' : 'Marcar todas como completadas';
+  const body = isReset
+    ? 'Va a borrar todas tus láminas marcadas y todas las repetidas. Esta acción no se puede deshacer. Considerá exportar un respaldo primero.'
+    : 'Va a marcar todas las láminas que aún no tenés con count=1. Las que ya tengas (incluyendo repetidas) quedan intactas.';
+  const confirmLabel = isReset ? 'Sí, vaciar todo' : 'Sí, marcar todas';
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 px-4 pb-4 pt-16 backdrop-blur-sm sm:items-center sm:pb-16"
+      onClick={onCancel}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="pointer-events-auto w-full max-w-md rounded-2xl border border-border bg-background p-5 shadow-2xl"
+      >
+        <h3 className="text-lg font-bold text-foreground">{title}</h3>
+        <p className="mt-2 text-sm text-foreground">{body}</p>
+        <div className="mt-5 flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={busy}
+            className={`min-h-11 rounded-lg px-4 py-3 text-sm font-bold transition-colors disabled:opacity-60 ${
+              isReset
+                ? 'bg-destructive text-destructive-foreground active:bg-destructive/80'
+                : 'bg-primary text-primary-foreground active:bg-primary/80'
+            }`}
+          >
+            {confirmLabel}
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={busy}
+            className="min-h-11 rounded-lg border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground transition-colors active:bg-muted disabled:opacity-60"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

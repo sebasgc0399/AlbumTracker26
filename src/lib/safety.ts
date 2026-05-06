@@ -89,6 +89,39 @@ export function parseBackup(text: string): BackupFile {
   };
 }
 
+export async function markAllOwned(): Promise<{
+  added: number;
+  alreadyOwned: number;
+}> {
+  const stickers = await db.stickers.toArray();
+  let added = 0;
+  let alreadyOwned = 0;
+  await db.transaction('rw', db.collection, async () => {
+    for (const sticker of stickers) {
+      const existing = await db.collection.get(sticker.id);
+      if (existing && existing.count >= 1) {
+        alreadyOwned += 1;
+        continue;
+      }
+      await db.collection.put({
+        stickerId: sticker.id,
+        owned: true,
+        count: 1,
+      });
+      added += 1;
+    }
+  });
+  return { added, alreadyOwned };
+}
+
+export async function resetCollection(): Promise<{ cleared: number }> {
+  const cleared = await db.collection.count();
+  await db.transaction('rw', db.collection, async () => {
+    await db.collection.clear();
+  });
+  return { cleared };
+}
+
 export async function importCollection(
   backup: BackupFile,
   mode: 'replace' | 'merge',
