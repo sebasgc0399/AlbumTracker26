@@ -69,7 +69,7 @@ function buildMuseum(): Sticker[] {
       number: id,
       name,
       team: "FWC",
-      teamName: "Introducción",
+      teamName: "Museo FIFA",
       group: "special",
       section: "museum",
       type: "special",
