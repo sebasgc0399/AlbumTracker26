@@ -1,13 +1,22 @@
+import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom';
+import HomePage from '@/pages/HomePage';
+
+function GroupPlaceholder() {
+  const { groupId } = useParams<{ groupId: string }>();
+  return (
+    <div className="min-h-screen bg-background p-4 text-foreground">
+      <p className="text-muted-foreground">Grupo {groupId} (pendiente F5)</p>
+    </div>
+  );
+}
+
 export default function App() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border p-4">
-        <h1 className="text-2xl font-bold text-primary">AlbumTracker26</h1>
-        <p className="text-sm text-muted-foreground">Panini Mundial 2026</p>
-      </header>
-      <main className="p-4">
-        <p className="text-muted-foreground">Setup base listo. Las features F1–F7 se implementan a continuación.</p>
-      </main>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/group/:groupId" element={<GroupPlaceholder />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
