@@ -32,27 +32,72 @@ Estas seis reglas son criterio de revisión para cada feature de abajo y para to
 
 ### F8: Modo "abrir sobre" (batch + undo)
 
-**Qué:** Modificar `QuickSearch` (de F6) para que el flujo de registro sea explícitamente por lote: el usuario abre la búsqueda, marca 7 láminas en sucesión rápida, y al final ve un mini resumen ("Marcaste 7 láminas: COL7, ARG3, …") con un botón **Deshacer** que revierte el batch entero. Cada tap individual también tiene undo de 5s.
+**Estado:** Implementado.
+
+**Qué:** SearchPage funciona como sesión de "sobre" con tres componentes: contador de progreso bajo el input, toast de undo del último tap (5s), y mini-resumen al cerrar el sobre con undo del batch entero (10s). La sesión arranca con el primer tap, se cierra por 30s sin tap o por X manual, y se descarta al desmontar.
 
 **Criterio de done:**
-- [ ] La búsqueda en Home tiene un contador flotante "Sobre actual: 0/7" que aumenta con cada lámina marcada
-- [ ] Después de cada tap exitoso, el input se limpia y un toast efímero (1.5s) muestra "+ COL7" con botón **Deshacer** dentro
-- [ ] El toast del último tap se persiste 5s antes de desaparecer
-- [ ] Al tocar **Deshacer** se revierte la mutación en `collection` (vuelve al estado previo: count 0 si era nueva, count-1 si era repetida)
-- [ ] Tras 7 taps o tras 30s sin actividad, aparece un resumen "Sobre cerrado: 7 nuevas, 0 repetidas" con **Deshacer todo el sobre** disponible 10s
-- [ ] Los toasts no bloquean el input — el usuario puede seguir escribiendo el siguiente número con el toast aún visible
-- [ ] Touch target del botón Deshacer ≥44×44px
+- [x] La búsqueda tiene un contador "Sobre actual · N / 7" que aparece tras el primer tap, incrementa con cada uno y se oculta cuando la sesión está idle
+- [x] Después de cada tap exitoso, el input se limpia y un toast persistente muestra "+ COL7" (o "+ COL7 (rep. N)" si era repetida) con botón **Deshacer** dentro
+- [x] El toast del último tap se persiste 5s antes de desaparecer; nuevo tap reinicia el countdown (key={mutation.ts} sobre la barra de animación)
+- [x] Al tocar **Deshacer** se revierte la mutación al `prevCount` snapshot — count 0 si era nueva (delete row), o el valor previo si era repetida (`revertToCount(id, prev)`)
+- [x] Tras 30s sin actividad o tras tocar la X del contador, aparece un resumen "Sobre cerrado · N nuevas, M repetidas" con **Deshacer todo** disponible 10s
+- [x] El countdown visual usa `@keyframes at26-countdown` en `index.css`, con override de `prefers-reduced-motion: reduce` que congela la animación
+- [x] Los toasts no bloquean el input — siguen siendo `pointer-events-none` excepto en el botón Deshacer
+- [x] Touch target del botón Deshacer ≥44×44px (`min-h-11 min-w-11`)
+- [x] Si el usuario tapea durante el resumen (10s post-cierre), arranca un sobre nuevo y el resumen anterior se descarta
+- [x] La mutación es atómica: `incrementAndReturn(id)` corre `db.transaction('rw', collection, ...)` que devuelve el `prev`/`next` resultantes — evita race condition de leer count del cache reactivo entre taps rápidos
+- [x] El umbral "7" es soft cap visual: el contador puede pasar de 7/7 a 8/7 si el usuario sigue tapeando. No auto-cierra
 
-**Archivos a crear/modificar:**
-- `src/components/QuickSearch.tsx` — agregar estado de "batch actual" y emitir eventos al hook
-- `src/components/UndoToast.tsx` — toast efímero con countdown visual y botón deshacer
-- `src/hooks/useBatchSession.ts` — hook que mantiene el array de mutaciones del sobre actual y expone `undoLast()` / `undoAll()` / `commitBatch()`
-- `src/db/hooks.ts` — agregar `markStickerOwned(id)` / `revertSticker(id, prevCount)` como mutations atómicas
+**Archivos creados/modificados (as-built):**
 
-**Notas de implementación:**
-La clave es que **undo es del estado previo, no del default**. Si una lámina ya estaba en count=2 y el usuario tocó (la marcó, llevándola a count=3), undo la regresa a count=2, no a 0. Guardar en el batch session el `prevCount` snapshot antes de cada mutación.
+Nuevos:
+- `src/hooks/useBatchSession.ts` — hook con state machine `idle | active | closed`, timer de inactividad (30s), TTL de summary (10s)
+- `src/components/UndoToast.tsx` — toast con countdown 5s y botón Deshacer
+- `src/components/BatchSummary.tsx` — banner full-width con summary text, "Deshacer todo" + "X" dismiss, countdown 10s
 
-El umbral "7" no es rígido — Panini vende sobres de varios tamaños. El número es un default visual; el batch se cierra por inactividad (30s) o por acción explícita (X en el contador), no por contar exactamente 7.
+Modificados:
+- `src/db/mutations.ts` — agregadas `revertToCount(id, prev)` (idempotente, delete si prev=0) y `incrementAndReturn(id)` (transaccional, devuelve `{prev, next}`)
+- `src/pages/SearchPage.tsx` — handleTap usa `incrementAndReturn` + `batch.recordTap`; reemplaza el toast antiguo por UndoToast/BatchSummary; agrega contador en header
+- `src/index.css` — `@keyframes at26-countdown` (escala horizontal 1→0) con override `prefers-reduced-motion`
+
+**Notas de implementación (as-built):**
+
+**Race condition resuelta**: el handleTap original leía `collection?.get(id)?.count` del cache reactivo de Dexie. Si el usuario tapeaba dos veces rápido antes del rerender, ambos taps grababan `prevCount=0` y un undo borraba ambos. La solución fue mover la lectura al lado de la mutación, en una transacción Dexie atómica (`incrementAndReturn`), y usar el valor devuelto para `recordTap`.
+
+**State machine en `useBatchSession`**:
+- `idle`: sin sobre activo. Counter oculto. Toast oculto. Summary oculto
+- `active`: hay un sobre en curso. Counter visible. Toast visible. Summary oculto
+- `closed`: sobre acabó (inactividad o X). Counter oculto. Toast oculto. Summary visible (10s)
+
+Transiciones:
+- idle → active: `recordTap` con cualquier mutation
+- active → closed: timer 30s desde el último tap, o `closeManually()`
+- closed → active: `recordTap` (descarta el batch anterior, arranca uno nuevo)
+- closed → idle: 10s de TTL, `dismissSummary()`, o `undoAll()`
+- active → active: `recordTap` (append), `undoLast()` (pop, queda activo aunque mutations vacíe)
+
+**Undo individual**: `undoLast()` saca el último entry y llama `revertToCount(id, prevCount)`. Si el usuario taping repetidamente, solo el ÚLTIMO tap tiene undo individual disponible — los anteriores quedaron tapados por el reemplazo del toast. Para recuperarlos, "Deshacer todo" en el resumen post-cierre.
+
+**Undo del batch**: `undoAll()` itera mutations en orden inverso y aplica `revertToCount` a cada. Esto importa cuando hay múltiples taps a la misma lámina (ej. ARG3: 0→1→2→3 en 3 taps); el unwind correcto requiere reversa para que el último prev (2) se aplique antes del intermedio (1) y del primero (0), terminando en 0.
+
+**Counter "0/7" como soft cap**: Panini vende sobres de varios tamaños. 7 es un default visual. El batch NO se cierra al llegar a 7; el contador puede mostrar "8 / 7" si el usuario sigue. Cierre solo por inactividad o X manual.
+
+**Sesión por SearchPage instance**: el hook vive en el componente. Al desmontar (navegar fuera de /search), la sesión muere. Los taps quedan committed en IndexedDB (la mutación ya pasó), pero el undo se pierde. Aceptable: el flujo es "abrir un sobre completo en /search", no "navegar y volver".
+
+**Decisiones de UX cerradas durante implementación:**
+- El contador NO arranca antes del primer tap (visualmente intrusivo si el usuario solo está buscando algo).
+- Tipear en el input NO extiende la inactividad — solo taps cuentan. Razón: si el usuario está pensando qué buscar, no debe extender el batch artificialmente.
+- Cuando el toast del último tap dura los 5s sin reemplazo y luego desaparece, las mutations siguen en el batch (no son undoables individualmente, pero sí en el resumen post-cierre).
+- El summary se posiciona fixed bottom-16 (encima del bottom nav) con max-w-md para mantener la lectura mobile.
+
+**Verificación e2e con Playwright (smoke test)**:
+- Counter incrementa correctamente con cada tap ✅
+- UndoToast aparece con código y countdown bar ✅
+- Cierre manual via X transitions a summary ✅
+- BatchSummary muestra "Sobre cerrado · N repetidas/nuevas" + Deshacer todo + ✕ ✅
+- "Deshacer todo" revierte mutations al prevCount original ✅
+- Sin errores de consola
 
 ---
 
@@ -346,12 +391,13 @@ src/
 │   ├── copy.ts                   # F13
 │   ├── storage-health.ts         # F14
 │   └── pwa-update.ts             # F15
-├── hooks/                        # NUEVO — hooks de UI (los de db quedan en db/hooks.ts)
-│   ├── useBatchSession.ts        # F8
+├── hooks/                        # hooks de UI (los de db quedan en db/hooks.ts)
+│   ├── useBatchSession.ts        # F8 ✓
 │   ├── useMilestoneWatcher.ts    # F10
 │   └── useScrollRestoration.ts   # F14
 ├── components/
-│   ├── UndoToast.tsx             # F8
+│   ├── UndoToast.tsx             # F8 ✓
+│   ├── BatchSummary.tsx          # F8 ✓
 │   ├── MilestoneOverlay.tsx      # F10
 │   ├── ThemeToggle.tsx           # F12
 │   ├── FlagIcon.tsx              # F16 ✓
@@ -378,7 +424,7 @@ scripts/                          # NUEVO — directorio raíz
 
 Al terminar esta fase, TODAS estas condiciones deben ser verdaderas:
 
-- [ ] Registrar 7 láminas seguidas vía búsqueda toma menos de 30s sin equivocarme
+- [x] Registrar 7 láminas seguidas vía búsqueda toma menos de 30s sin equivocarme (F8 implementado: contador + undo individual + undo batch)
 - [ ] Cada tap en una lámina tiene feedback haptic (Android) y visual coherente en toda la app
 - [ ] Completar un equipo (20/20) dispara un overlay de celebración con texto y confetti
 - [ ] La app se ve correctamente en modo oscuro y el toggle persiste entre sesiones
@@ -386,7 +432,7 @@ Al terminar esta fase, TODAS estas condiciones deben ser verdaderas:
 - [ ] El header no queda debajo del notch en iPhone, ni el bottom nav debajo de la gesture bar
 - [ ] Volver atrás desde un equipo restaura el scroll de Home
 - [ ] Si hay una nueva versión deployada, aparece un banner "Recargar" que funciona
-- [ ] Toda mutación tiene undo dentro de 5s mínimo
+- [x] Toda mutación tiene undo dentro de 5s mínimo (F8: undo individual 5s + undo batch 10s post-cierre)
 - [ ] La voz de la app es coherente — ningún texto rompe el tono definido en F13
 - [ ] Touch targets ≥44px en todos los botones, contrast AA en ambos modos
 - [ ] `prefers-reduced-motion: reduce` apaga las animaciones decorativas

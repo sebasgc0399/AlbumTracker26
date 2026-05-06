@@ -1,28 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import SearchResult from '@/components/SearchResult';
+import UndoToast from '@/components/UndoToast';
+import BatchSummary from '@/components/BatchSummary';
 import type { Sticker } from '@/db/database';
 import { useCollection, useStickers } from '@/db/hooks';
-import { incrementCount } from '@/db/mutations';
+import { incrementAndReturn } from '@/db/mutations';
+import { useBatchSession } from '@/hooks/useBatchSession';
 
 const MAX_VISIBLE = 8;
 const FLASH_MS = 220;
-const TOAST_MS = 1600;
-
-interface Toast {
-  id: number;
-  message: string;
-}
+const SOBRE_TARGET = 7;
 
 export default function SearchPage() {
   const stickers = useStickers();
   const collection = useCollection();
   const location = useLocation();
+  const batch = useBatchSession();
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
   const [flashId, setFlashId] = useState<string | null>(null);
-  const [toast, setToast] = useState<Toast | null>(null);
 
   // Focus on mount and whenever the user navigates back to /search.
   useEffect(() => {
@@ -35,16 +33,8 @@ export default function SearchPage() {
     return () => window.clearTimeout(timer);
   }, [flashId]);
 
-  useEffect(() => {
-    if (!toast) return;
-    const timer = window.setTimeout(() => setToast(null), TOAST_MS);
-    return () => window.clearTimeout(timer);
-  }, [toast]);
-
   const sortedStickers = useMemo<Sticker[] | undefined>(() => {
     if (!stickers) return undefined;
-    // Stable order: team order in catalog, then by position. Same mental
-    // model as TeamPage so prefix searches surface "COL1, COL2..." in order.
     return [...stickers].sort((a, b) => {
       if (a.team !== b.team) return a.team.localeCompare(b.team);
       return a.position - b.position;
@@ -69,28 +59,19 @@ export default function SearchPage() {
     }
   }
 
-  function handleTap(sticker: Sticker) {
-    const previousCount = collection?.get(sticker.id)?.count ?? 0;
-    const nextCount = previousCount + 1;
-
+  async function handleTap(sticker: Sticker) {
     vibrate();
-    void incrementCount(sticker.id);
-
     setFlashId(sticker.id);
-    setToast({
-      id: Date.now(),
-      message:
-        nextCount >= 2
-          ? `Sumada ${sticker.id} (+${nextCount - 1} repetida${nextCount - 1 === 1 ? '' : 's'})`
-          : `Sumada ${sticker.id}`,
-    });
-
     setQuery('');
     inputRef.current?.focus();
+    const { prev, next } = await incrementAndReturn(sticker.id);
+    batch.recordTap(sticker.id, prev, next);
   }
 
   const isCatalogLoading = sortedStickers === undefined;
   const isCollectionLoading = collection === undefined;
+  const showCounter = batch.isActive && batch.mutations.length > 0;
+  const showSummary = batch.isClosed && batch.summary !== null;
 
   return (
     <div className="min-h-screen bg-background pb-20 text-foreground">
@@ -120,6 +101,26 @@ export default function SearchPage() {
               className="w-full rounded-lg border border-border bg-background px-4 py-3 font-mono text-base uppercase tracking-wide text-foreground placeholder:font-sans placeholder:normal-case placeholder:tracking-normal placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
           </div>
+          {showCounter && (
+            <div className="mt-2 flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs text-primary">
+              <span className="font-semibold">
+                Sobre actual ·{' '}
+                <span className="font-mono tabular-nums">
+                  {batch.mutations.length} / {SOBRE_TARGET}
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={batch.closeManually}
+                aria-label="Cerrar sobre"
+                className="ml-auto flex h-6 w-6 items-center justify-center rounded-full text-primary/70 transition-colors active:bg-primary/20"
+              >
+                <span aria-hidden="true" className="text-base leading-none">
+                  ×
+                </span>
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
@@ -166,16 +167,19 @@ export default function SearchPage() {
         )}
       </main>
 
-      {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="pointer-events-none fixed inset-x-0 bottom-20 z-30 flex justify-center px-4"
-        >
-          <div className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-lg">
-            {toast.message}
-          </div>
-        </div>
+      {!showSummary && (
+        <UndoToast
+          mutation={batch.lastMutation}
+          onUndo={() => void batch.undoLast()}
+        />
+      )}
+
+      {showSummary && (
+        <BatchSummary
+          summary={batch.summary}
+          onUndoAll={() => void batch.undoAll()}
+          onDismiss={batch.dismissSummary}
+        />
       )}
     </div>
   );
