@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la \"d:/Proyectos VS CODE/AlbumTracker26/.claude/\" 2>/dev/null; ls -la \"d:/Proyectos VS CODE/AlbumTracker26/\" | grep -i mcp; ls \"C:/Users/sebas/.claude/\" 2>/dev/null)",
+      "Read(//c/Users/sebas/.claude/**)",
+      "Bash(claude mcp *)",
+      "Bash(claude plugin *)"
+    ]
+  }
+}
