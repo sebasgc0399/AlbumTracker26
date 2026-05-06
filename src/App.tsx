@@ -10,6 +10,8 @@ import SharedListPage from '@/pages/SharedListPage';
 import CambiatonPage from '@/pages/CambiatonPage';
 import SettingsPage from '@/pages/SettingsPage';
 import BottomNav from '@/components/BottomNav';
+import MilestoneOverlay from '@/components/MilestoneOverlay';
+import { MilestoneProvider } from '@/hooks/useMilestoneWatcher';
 import { subscribeToSystemTheme } from '@/lib/theme';
 
 const HIDE_NAV_PATHS: readonly string[] = ['/share', '/cambiaton', '/settings'];
@@ -25,18 +27,21 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/group/:groupId" element={<GroupPage />} />
-        <Route path="/team/:teamCode" element={<TeamPage />} />
-        <Route path="/search" element={<SearchPage />} />
-        <Route path="/duplicates" element={<DuplicatesPage />} />
-        <Route path="/missing" element={<MissingPage />} />
-        <Route path="/share" element={<SharedListPage />} />
-        <Route path="/cambiaton" element={<CambiatonPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-      </Routes>
-      <ConditionalBottomNav />
+      <MilestoneProvider>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/group/:groupId" element={<GroupPage />} />
+          <Route path="/team/:teamCode" element={<TeamPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/duplicates" element={<DuplicatesPage />} />
+          <Route path="/missing" element={<MissingPage />} />
+          <Route path="/share" element={<SharedListPage />} />
+          <Route path="/cambiaton" element={<CambiatonPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+        </Routes>
+        <ConditionalBottomNav />
+        <MilestoneOverlay />
+      </MilestoneProvider>
     </BrowserRouter>
   );
 }
