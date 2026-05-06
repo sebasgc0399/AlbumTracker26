@@ -1,20 +1,12 @@
-import { TEAMS } from '@/data/teams';
 import type { CollectionEntry, Sticker } from '@/db/database';
+import FlagIcon from './FlagIcon';
+import { flagInfoForTeamCode } from '@/utils/flagFor';
 
 interface SearchResultProps {
   sticker: Sticker;
   entry: CollectionEntry | undefined;
   onTap: (sticker: Sticker) => void;
   isFlashing?: boolean;
-}
-
-const FLAG_BY_TEAM = new Map(TEAMS.map((team) => [team.code, team.flag]));
-
-function flagFor(teamCode: string): string {
-  if (FLAG_BY_TEAM.has(teamCode)) return FLAG_BY_TEAM.get(teamCode) ?? '';
-  if (teamCode === 'CC') return '🥤';
-  if (teamCode === 'FWC') return '🏆';
-  return '⚽';
 }
 
 export default function SearchResult({
@@ -31,6 +23,8 @@ export default function SearchResult({
     ? 'bg-success/30 ring-2 ring-success'
     : 'bg-background hover:bg-muted active:bg-muted';
 
+  const flagInfo = flagInfoForTeamCode(sticker.team);
+
   return (
     <button
       type="button"
@@ -38,9 +32,17 @@ export default function SearchResult({
       aria-label={`Sumar lámina ${sticker.id}${isOwned ? `, tengo ${count}` : ''}`}
       className={`flex h-16 w-full items-center gap-3 rounded-lg border border-border px-3 text-left transition-colors ${flashClasses}`}
     >
-      <span className="shrink-0 text-2xl leading-none" aria-hidden="true">
-        {flagFor(sticker.team)}
-      </span>
+      {flagInfo.flagCode ? (
+        <FlagIcon
+          code={flagInfo.flagCode}
+          alt=""
+          className="w-8 shrink-0 shadow-sm"
+        />
+      ) : (
+        <span className="shrink-0 text-2xl leading-none" aria-hidden="true">
+          {flagInfo.emoji}
+        </span>
+      )}
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
           <span className="font-mono text-sm font-bold tabular-nums text-foreground">

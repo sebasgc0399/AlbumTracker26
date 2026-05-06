@@ -1,19 +1,19 @@
+import type { ReactNode } from 'react';
+
 interface TeamGroupHeaderProps {
-  flag: string;
+  flagSlot: ReactNode;
   name: string;
   countLabel: string;
 }
 
 export default function TeamGroupHeader({
-  flag,
+  flagSlot,
   name,
   countLabel,
 }: TeamGroupHeaderProps) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-2xl leading-none" aria-hidden="true">
-        {flag}
-      </span>
+      <span className="shrink-0">{flagSlot}</span>
       <h2 className="flex-1 truncate text-base font-semibold text-foreground">
         {name}
       </h2>

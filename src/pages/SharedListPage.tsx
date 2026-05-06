@@ -6,17 +6,20 @@ import { useCollection, useStickers } from '@/db/hooks';
 import { useLocalStoragePref } from '@/hooks/useLocalStoragePref';
 import { decodeTradeList, type EncodedPayload } from '@/utils/encodeTradeList';
 import { matchLists, type MatchResult } from '@/utils/matchLists';
-import { TEAMS } from '@/data/teams';
+import { flagInfoForTeamName } from '@/utils/flagFor';
+import FlagIcon from '@/components/FlagIcon';
 import TeamGroupHeader from '@/components/TeamGroupHeader';
 
-const FLAG_BY_TEAM_NAME = new Map(TEAMS.map((team) => [team.name, team.flag]));
-
-function flagForTeamName(teamName: string): string {
-  const flag = FLAG_BY_TEAM_NAME.get(teamName);
-  if (flag) return flag;
-  if (teamName === 'Coca-Cola') return '🥤';
-  if (teamName === 'Introducción' || teamName === 'Museo FIFA') return '🏆';
-  return '⚽';
+function teamFlagSlot(teamName: string) {
+  const info = flagInfoForTeamName(teamName);
+  if (info.flagCode) {
+    return <FlagIcon code={info.flagCode} alt="" className="w-8 shadow-sm" />;
+  }
+  return (
+    <span className="text-2xl leading-none" aria-hidden="true">
+      {info.emoji}
+    </span>
+  );
 }
 
 function naturalSortIds(ids: string[]): string[] {
@@ -84,7 +87,7 @@ function StickerList({ title, count, stickers, emptyHint }: StickerListProps) {
             <li key={teamName}>
               <div className="mb-1">
                 <TeamGroupHeader
-                  flag={flagForTeamName(teamName)}
+                  flagSlot={teamFlagSlot(teamName)}
                   name={teamName}
                   countLabel={`${items.length}`}
                 />
@@ -151,7 +154,7 @@ function RawIdsList({ title, count, ids, stickersById }: RawIdsListProps) {
             <li key={teamName}>
               <div className="mb-1">
                 <TeamGroupHeader
-                  flag={flagForTeamName(teamName)}
+                  flagSlot={teamFlagSlot(teamName)}
                   name={teamName}
                   countLabel={`${items.length}`}
                 />

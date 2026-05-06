@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint src",
+    "flags:sync": "node scripts/copy-flags.mjs",
     "deploy": "npm run build && firebase deploy --only hosting"
   },
   "dependencies": {
@@ -28,6 +29,7 @@
     "eslint": "^9.17.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.16",
+    "flag-icons": "^7.5.0",
     "globals": "^15.14.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0",

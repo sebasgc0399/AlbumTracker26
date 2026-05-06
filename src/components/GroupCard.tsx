@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { TEAMS } from '@/data/teams';
 import type { CollectionEntry } from '@/db/database';
+import FlagIcon from './FlagIcon';
 import ProgressBar from './ProgressBar';
 
 interface GroupCardProps {
@@ -44,7 +45,7 @@ export default function GroupCard({ groupId, collection }: GroupCardProps) {
             key={team.code}
             className="flex items-center gap-1.5 text-xs text-foreground"
           >
-            <span className="text-base leading-none">{team.flag}</span>
+            <FlagIcon code={team.flagCode} alt="" className="w-5 shrink-0" />
             <span className="truncate">{team.name}</span>
           </li>
         ))}

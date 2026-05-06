@@ -1,23 +1,26 @@
 import { useMemo } from 'react';
-import { TEAMS } from '@/data/teams';
 import DuplicateRow from '@/components/DuplicateRow';
+import FlagIcon from '@/components/FlagIcon';
 import ShareImageButton from '@/components/ShareImageButton';
 import ShareLinkButton from '@/components/ShareLinkButton';
 import ShareListButton from '@/components/ShareListButton';
 import TeamGroupHeader from '@/components/TeamGroupHeader';
 import { useDuplicatesByTeam, type DuplicateEntry } from '@/db/hooks';
 import { useLocalStoragePref } from '@/hooks/useLocalStoragePref';
+import { flagInfoForTeamName } from '@/utils/flagFor';
 
 type OrderMode = 'by-team' | 'most-duplicates';
 
-const FLAG_BY_TEAM_NAME = new Map(TEAMS.map((team) => [team.name, team.flag]));
-
-function flagForTeamName(teamName: string): string {
-  const flag = FLAG_BY_TEAM_NAME.get(teamName);
-  if (flag) return flag;
-  if (teamName === 'Coca-Cola') return '🥤';
-  if (teamName === 'Introducción' || teamName === 'Museo FIFA') return '🏆';
-  return '⚽';
+function teamFlagSlot(teamName: string) {
+  const info = flagInfoForTeamName(teamName);
+  if (info.flagCode) {
+    return <FlagIcon code={info.flagCode} alt="" className="w-8 shadow-sm" />;
+  }
+  return (
+    <span className="text-2xl leading-none" aria-hidden="true">
+      {info.emoji}
+    </span>
+  );
 }
 
 function sumExtra(entries: DuplicateEntry[]): number {
@@ -143,7 +146,7 @@ export default function DuplicatesPage() {
                 >
                   <div className="mb-2">
                     <TeamGroupHeader
-                      flag={flagForTeamName(teamName)}
+                      flagSlot={teamFlagSlot(teamName)}
                       name={teamName}
                       countLabel={`${teamTotal} repetida${
                         teamTotal === 1 ? '' : 's'

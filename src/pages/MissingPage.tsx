@@ -1,22 +1,23 @@
-import { TEAMS } from '@/data/teams';
 import { useMissingByTeam } from '@/db/hooks';
 import { useLocalStoragePref } from '@/hooks/useLocalStoragePref';
 import { ALMOST_COMPLETE_THRESHOLD } from '@/utils/constants';
+import { flagInfoForTeamName } from '@/utils/flagFor';
+import FlagIcon from '@/components/FlagIcon';
 import MissingRow from '@/components/MissingRow';
 import ProgressBar from '@/components/ProgressBar';
 import ShareImageButton from '@/components/ShareImageButton';
 import ShareListButton from '@/components/ShareListButton';
 
-const FLAG_BY_TEAM_NAME = new Map(TEAMS.map((team) => [team.name, team.flag]));
-
-function flagFor(teamName: string): string {
-  if (FLAG_BY_TEAM_NAME.has(teamName)) {
-    return FLAG_BY_TEAM_NAME.get(teamName) ?? '';
+function teamFlagSlot(teamName: string) {
+  const info = flagInfoForTeamName(teamName);
+  if (info.flagCode) {
+    return <FlagIcon code={info.flagCode} alt="" className="w-8 shadow-sm" />;
   }
-  // Special groups in the album.
-  if (teamName === 'Coca-Cola') return '🥤';
-  if (teamName === 'Introducción' || teamName === 'Museo FIFA') return '🏆';
-  return '⚽';
+  return (
+    <span className="text-2xl leading-none" aria-hidden="true">
+      {info.emoji}
+    </span>
+  );
 }
 
 export default function MissingPage() {
@@ -101,9 +102,7 @@ export default function MissingPage() {
                   className="rounded-xl border border-border bg-background p-3"
                 >
                   <div className="mb-2 flex items-center gap-2">
-                    <span className="text-2xl leading-none">
-                      {flagFor(teamName)}
-                    </span>
+                    <span className="shrink-0">{teamFlagSlot(teamName)}</span>
                     <h2 className="flex-1 truncate text-base font-semibold text-foreground">
                       {teamName}
                     </h2>

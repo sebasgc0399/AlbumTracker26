@@ -2,6 +2,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import { TEAMS } from '@/data/teams';
 import { useCollection } from '@/db/hooks';
 import ProgressBar from '@/components/ProgressBar';
+import FlagIcon from '@/components/FlagIcon';
 import FilterChips, { type FilterValue } from '@/components/FilterChips';
 import { useSessionStoragePref } from '@/hooks/useSessionStoragePref';
 
@@ -80,7 +81,11 @@ export default function GroupPage() {
                   to={`/team/${team.code}`}
                   className="flex items-center gap-3 rounded-lg border border-border bg-background p-3 transition-colors active:bg-muted"
                 >
-                  <span className="text-3xl leading-none">{team.flag}</span>
+                  <FlagIcon
+                    code={team.flagCode}
+                    alt=""
+                    className="w-12 shadow-sm"
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-baseline justify-between gap-2">
                       <p className="truncate text-base font-semibold text-foreground">

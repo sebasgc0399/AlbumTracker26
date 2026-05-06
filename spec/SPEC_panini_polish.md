@@ -258,16 +258,79 @@ Importante: el SW se actualiza en background incluso sin interacción. El banner
 
 ---
 
+### F16: Banderas SVG por equipo
+
+**Estado:** Implementado fuera del orden propuesto (antes de F11/F12) por bajo acoplamiento al sistema visual y para destrabar el known issue del canvas. Los detalles abajo reflejan la implementación real.
+
+**Qué:** Reemplazo total del emoji `flag` por SVG reales servidos desde `public/flags/`, usados como elemento de identificación rápida en todas las superficies de la app que ya mostraban el emoji bandera. Los SVG vienen del paquete `flag-icons` (Lipis, MIT) instalado como devDependency y copiados al build directory por un script Node.
+
+**Criterio de done:**
+- [x] El campo `flag: string` (emoji) sale del modelo `Team` en `src/data/teams.ts`. Lo reemplaza `flagCode: string`, con el código que usa flag-icons (en general ISO2 minúscula; casos compuestos: ENG→`gb-eng`, KOR→`kr`, KSA→`sa`, IRN→`ir`, POR→`pt`, RSA→`za`, ALG→`dz`, GER→`de`, NED→`nl`, DEN→`dk`, SUI→`ch`, URU→`uy`, PAR→`py`, CRC→`cr`)
+- [x] Existe `scripts/copy-flags.mjs` que lee `node_modules/flag-icons/flags/4x3/{flagCode}.svg` para los 48 equipos y los copia a `public/flags/{flagCode}.svg`. Idempotente. Borra los SVG huérfanos de `public/flags/` que ya no estén en TEAMS. Se ejecuta vía `npm run flags:sync`
+- [x] `flag-icons` está en `devDependencies` (NO en `dependencies`) — no forma parte del bundle final
+- [x] Existe `<FlagIcon code={flagCode} alt={...} className?={...} />` en `src/components/FlagIcon.tsx` que renderiza `<img src="/flags/{code}.svg">` con `loading="lazy"`, `decoding="async"` y aspect-ratio 4:3 enforced
+- [x] Helper compartido `src/utils/flagFor.ts` con `flagInfoForTeamCode(code)` y `flagInfoForTeamName(name)` que devuelven `{ flagCode: string | null, emoji: string }`. Usado por consumidores que mezclan equipos de país con especiales (CC, FWC, Coca-Cola, Museo FIFA, Introducción)
+- [x] **TeamPage** (header del equipo): bandera a w-12 (48×36px) junto al nombre. `alt=""`
+- [x] **GroupPage** (cards de los 4 equipos del grupo): bandera a w-12. `alt=""`
+- [x] **GroupCard** (Home, mosaico de 4 banderas por grupo): bandera a w-5 (20×15px). `alt=""`
+- [x] **SearchResult** (resultado de búsqueda): bandera a w-8 si es equipo de país; emoji 🥤/🏆/⚽ si es CC/FWC/desconocido. `alt=""`
+- [x] **TeamGroupHeader** (header reutilizable): API cambia de `flag: string` a `flagSlot: ReactNode` para que cada caller decida qué renderizar (FlagIcon o emoji especial)
+- [x] **DuplicatesPage** y **SharedListPage**: agrupadores por equipo usan `TeamGroupHeader` con `flagSlot` armado vía helper `teamFlagSlot(teamName)` local
+- [x] **MissingPage**: agrupador inline (no usa TeamGroupHeader) renderiza FlagIcon o emoji según corresponda
+- [x] **renderTradeImage.ts (F4 share-imagen, canvas)**: pre-load de los SVGs requeridos vía `Image()` y `drawImage` reemplazando el `fillText` del emoji. Resuelve el known issue de "AR" como letras en desktop
+- [x] El service worker precachea `/flags/*.svg` (ya cubierto por `globPatterns: '**/*.{js,css,html,json,png,svg,woff2}'` existente en `vite.config.ts`)
+- [x] Si una bandera falla al cargar, `FlagIcon` cae a un placeholder neutro (cuadro `bg-muted` con el primer segmento del código en monospace) — nunca rompe el layout
+- [x] `npm run build` produce bundle final sin las 250 banderas del paquete completo — solo las 48 referenciadas viven en `dist/flags/`. Bundle JS sigue en ~548KB (sin cambio respecto a pre-F16)
+- [ ] **MilestoneOverlay (F10)**: diferido a la implementación de F10. `FlagIcon` queda listo; cuando F10 entre, monta la bandera grande con `alt="{nombre del equipo}"` para el milestone "equipo completo 20/20"
+
+**Archivos creados/modificados (as-built):**
+
+Nuevos:
+- `src/components/FlagIcon.tsx` — componente con fallback
+- `src/utils/flagFor.ts` — helpers `flagInfoForTeamCode` / `flagInfoForTeamName`
+- `scripts/copy-flags.mjs` — script Node idempotente con prune de huérfanos
+- `public/flags/*.svg` — 48 archivos copiados desde flag-icons
+
+Modificados:
+- `src/data/teams.ts` — `flag` (emoji) → `flagCode` (string)
+- `package.json` — `flag-icons` en `devDependencies` + script `flags:sync`
+- `src/components/TeamGroupHeader.tsx` — API: `flag: string` → `flagSlot: ReactNode`
+- `src/components/GroupCard.tsx`, `src/components/SearchResult.tsx`
+- `src/pages/TeamPage.tsx`, `src/pages/GroupPage.tsx`, `src/pages/DuplicatesPage.tsx`, `src/pages/MissingPage.tsx`, `src/pages/SharedListPage.tsx`
+- `src/utils/renderTradeImage.ts` — preload + drawImage en lugar de fillText emoji
+
+Sin cambios:
+- `vite.config.ts` — `workbox.globPatterns` ya incluía `svg`
+
+**Notas de implementación (as-built):**
+
+`flag-icons` como devDep + script de copia evita que Vite embeba 250 banderas en el bundle. El script extrae los 48 códigos vía regex sobre `teams.ts` (single source of truth) y copia desde `node_modules/flag-icons/flags/4x3/`. Eliminar un equipo del array y volver a correr `npm run flags:sync` borra el SVG huérfano automáticamente.
+
+`<img src="/flags/{code}.svg">` con `loading="lazy"` permite que el navegador las cachee por separado y el SW las precachee desde el primer install. En Home (GroupCard mosaico de 4 banderas × 12 grupos = 48 banderas en first paint), `loading="lazy"` evita que las banderas fuera del viewport se descarguen antes de tiempo. Total de los 48 SVGs en `dist/flags/`: ~482KB sin compresión, ~150KB tras gzip del SW.
+
+`alt=""` cuando la bandera está al lado del nombre del país es la regla A11Y correcta: si screen reader anuncia "imagen Argentina, Argentina" es ruido. Cuando la bandera vaya sola (futuro MilestoneOverlay), `alt` informativo será obligatorio.
+
+Casos compuestos (`gb-eng` para Inglaterra): por eso el campo se llama `flagCode` y no `iso2`. Si mañana entra Escocia/Gales como equipos invitados, el modelo no rompe.
+
+**Decisión revertida durante la implementación**: la versión inicial del SPEC excluía Home (GroupCard) por miedo a 240KB en first paint. Al mapear el código real se descubrió que GroupCard YA mostraba 48 emoji-banderas en first paint, así que migrar a SVG es continuidad, no scope creep. `loading="lazy"` mitiga el costo y el SW precachea para visitas siguientes.
+
+**Especiales sin SVG**: las "team codes" CC (Coca-Cola) y FWC (FIFA museum/intro) no son países y no tienen bandera. Mantienen los emoji 🥤 / 🏆 como fallback en `flagInfoFor*`. El `<span>` que los renderiza tiene `aria-hidden="true"` consistente con el resto de iconos decorativos. Si en el futuro se quieren reemplazar por SVG personalizados (logo Coca-Cola, trofeo FIFA), basta agregar dos archivos a `public/flags/` y cambiar el helper para devolver el `flagCode` correspondiente.
+
+**Markers de UI no migrados**: los emojis 🟢 🔴 (CAMBIO/BUSCO) en `renderTradeImage.ts` se mantienen como texto. No son banderas — son colored markers tipográficos universales. Mantenerlos preserva el peso del SVG layer en mínimo y son claramente distintos visualmente del concepto "bandera".
+
+---
+
 ## Orden de implementación
 
 1. **F8 (Modo abrir-sobre)** → Es la mejora con mayor impacto en el flujo crítico. Es el primero porque toca la API de mutations en `db/hooks.ts` que las features F9, F10 también consumen.
 2. **F9 (Feedback sensorial)** → Depende de F8 (las mutations dispatchean feedback). Centralizado primero para no parchar componentes después.
 3. **F12 (Modo oscuro)** → Antes de F11 porque define la paleta dual. Implementar identidad visual encima de un dark mode inexistente obliga a re-trabajar tokens.
 4. **F11 (Identidad visual)** → Encima de F12 ya con paleta light+dark estable.
-5. **F10 (Hitos)** → Depende de F9 (haptic kind: 'milestone'). Encima de F11 para que el overlay use la tipografía y paleta nuevas.
-6. **F13 (Microcopy)** → Pase de revisión cross-app. Último porque depende de tener todas las superficies de texto definidas.
-7. **F14 (Robustez móvil)** → Independiente, en paralelo con F13.
-8. **F15 (Update prompt PWA)** → Último porque solo aporta valor cuando hay deploys frecuentes. Hasta este punto, recargas manuales bastan.
+5. **F16 (Banderas SVG)** → Después de F11 (paleta/tipografía estables) y antes de F10 para que el overlay de "equipo completo" salga con bandera desde su primera versión.
+6. **F10 (Hitos)** → Depende de F9 (haptic kind: 'milestone') y F16 (bandera en overlay de team-complete). Encima de F11 para que el overlay use la tipografía y paleta nuevas.
+7. **F13 (Microcopy)** → Pase de revisión cross-app. Último porque depende de tener todas las superficies de texto definidas.
+8. **F14 (Robustez móvil)** → Independiente, en paralelo con F13.
+9. **F15 (Update prompt PWA)** → Último porque solo aporta valor cuando hay deploys frecuentes. Hasta este punto, recargas manuales bastan.
 
 ---
 
@@ -291,16 +354,22 @@ src/
 │   ├── UndoToast.tsx             # F8
 │   ├── MilestoneOverlay.tsx      # F10
 │   ├── ThemeToggle.tsx           # F12
+│   ├── FlagIcon.tsx              # F16 ✓
 │   ├── StorageBanner.tsx         # F14
 │   └── UpdateBanner.tsx          # F15
+├── utils/
+│   └── flagFor.ts                # F16 ✓ — helpers flagInfoForTeam{Code,Name}
 ├── pages/
 │   └── SettingsPage.tsx          # F12 (dark + sound toggles + futuro)
 └── index.css                     # extiende con :where(.dark), keyframes, safe-areas
 public/
 ├── fonts/                        # F11 — Inter + Geist Mono variable
+├── flags/                        # F16 ✓ — 48 SVGs copiados desde flag-icons
 ├── icon-192.png                  # F11 — reemplaza placeholders de F3
 ├── icon-512.png
 └── icon-maskable.png
+scripts/                          # NUEVO — directorio raíz
+└── copy-flags.mjs                # F16 ✓ — copia los 48 SVGs desde node_modules a public/flags/
 ```
 
 ---
@@ -321,6 +390,8 @@ Al terminar esta fase, TODAS estas condiciones deben ser verdaderas:
 - [ ] La voz de la app es coherente — ningún texto rompe el tono definido en F13
 - [ ] Touch targets ≥44px en todos los botones, contrast AA en ambos modos
 - [ ] `prefers-reduced-motion: reduce` apaga las animaciones decorativas
+- [x] Las pantallas TeamPage, GroupPage, Home (GroupCard), Search, Repetidas, Faltantes y Lista compartida muestran la bandera del país como SVG sin emojis (la celebración de equipo completo queda pendiente hasta que entre F10)
+- [x] El bundle final no contiene el paquete completo de flag-icons — solo los 48 SVG necesarios viven en `public/flags/`
 
 ---
 
@@ -355,6 +426,9 @@ F9 fuerza que toda animación + haptic + sonido pase por `feedback({ kind })`. *
 
 ### El SPEC del MVP no se modifica
 F1–F7 ya están definidos y en parte commiteados. Esta fase agrega F8+ pero no toca el SPEC anterior. Cuando F1–F7 estén 100% cerradas, ese SPEC se archiva con el skill `archive-spec` y queda como registro histórico.
+
+### `flag-icons` como devDependency
+F16 instala `flag-icons` como devDep y copia los 48 SVG necesarios a `public/flags/` con un script Node. Como dependency runtime, Vite no puede tree-shakear los SVG no referenciados y el bundle se infla con 200+ banderas que nunca se usan. El script mantiene el control explícito.
 
 ---
 

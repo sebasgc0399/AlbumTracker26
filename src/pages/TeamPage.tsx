@@ -5,6 +5,7 @@ import { useCollection, useStickers } from '@/db/hooks';
 import type { Sticker } from '@/db/database';
 import { incrementCount } from '@/db/mutations';
 import ProgressBar from '@/components/ProgressBar';
+import FlagIcon from '@/components/FlagIcon';
 import StickerChip from '@/components/StickerChip';
 import StickerDetail from '@/components/StickerDetail';
 import FilterChips, { type FilterValue } from '@/components/FilterChips';
@@ -94,7 +95,11 @@ export default function TeamPage() {
                 ←
               </span>
             </Link>
-            <span className="text-3xl leading-none">{team.flag}</span>
+            <FlagIcon
+              code={team.flagCode}
+              alt=""
+              className="w-12 shadow-sm"
+            />
             <div className="min-w-0 flex-1">
               <h1 className="truncate text-lg font-bold text-foreground">
                 {team.name}

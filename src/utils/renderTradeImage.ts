@@ -7,11 +7,17 @@ const PADDING = 60;
 const EMOJI_FONT_STACK =
   "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', system-ui, sans-serif";
 
-const FLAG_BY_TEAM_CODE = new Map(TEAMS.map((t) => [t.code, t.flag]));
+const FLAG_W = 52;
+const FLAG_H = 39;
+const FLAG_GAP = 16;
 
-function flagForTeamCode(code: string): string {
-  const flag = FLAG_BY_TEAM_CODE.get(code);
-  if (flag) return flag;
+const FLAG_CODE_BY_TEAM_CODE = new Map(TEAMS.map((t) => [t.code, t.flagCode]));
+
+function flagCodeForTeam(code: string): string | null {
+  return FLAG_CODE_BY_TEAM_CODE.get(code) ?? null;
+}
+
+function fallbackEmojiForTeam(code: string): string {
   if (code === 'CC') return '🥤';
   if (code === 'FWC') return '🏆';
   return '⚽';
@@ -36,7 +42,7 @@ function naturalSortIds(ids: string[]): string[] {
 
 interface TeamGroup {
   code: string;
-  flag: string;
+  flagCode: string | null;
   ids: string[];
 }
 
@@ -55,7 +61,7 @@ function groupIdsByTeam(
   const teams = Array.from(map.keys()).sort((a, b) => a.localeCompare(b));
   return teams.map((code) => ({
     code,
-    flag: flagForTeamCode(code),
+    flagCode: flagCodeForTeam(code),
     ids: naturalSortIds(map.get(code) ?? []),
   }));
 }
@@ -66,6 +72,63 @@ function setFont(
   weight: 'normal' | 'bold' = 'normal',
 ): void {
   ctx.font = `${weight === 'bold' ? 'bold ' : ''}${size}px ${EMOJI_FONT_STACK}`;
+}
+
+function loadImage(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+async function preloadFlags(
+  codes: Iterable<string>,
+): Promise<Map<string, HTMLImageElement>> {
+  const unique = Array.from(new Set(codes));
+  const entries = await Promise.all(
+    unique.map(async (code) => {
+      const img = await loadImage(`/flags/${code}.svg`);
+      return img ? ([code, img] as const) : null;
+    }),
+  );
+  const map = new Map<string, HTMLImageElement>();
+  for (const entry of entries) {
+    if (entry) map.set(entry[0], entry[1]);
+  }
+  return map;
+}
+
+function measureFlagPrefix(
+  ctx: CanvasRenderingContext2D,
+  group: TeamGroup,
+): number {
+  if (group.flagCode) return FLAG_W + FLAG_GAP;
+  return ctx.measureText(`${fallbackEmojiForTeam(group.code)}  `).width;
+}
+
+function drawFlagPrefix(
+  ctx: CanvasRenderingContext2D,
+  group: TeamGroup,
+  x: number,
+  y: number,
+  flags: Map<string, HTMLImageElement>,
+  bodyFontSize: number,
+): void {
+  if (group.flagCode) {
+    const img = flags.get(group.flagCode);
+    if (img) {
+      // Drawing baseline-aligned: y is the text baseline; place flag so its
+      // bottom sits a few px above baseline for visual alignment.
+      const flagY = y - FLAG_H + Math.round(bodyFontSize * 0.2);
+      ctx.drawImage(img, x, flagY, FLAG_W, FLAG_H);
+      return;
+    }
+  }
+  // Fallback: text emoji (CC, FWC, or SVG load error)
+  const emoji = fallbackEmojiForTeam(group.code);
+  ctx.fillText(`${emoji}  `, x, y);
 }
 
 function wrapTokens(
@@ -92,7 +155,7 @@ function wrapTokens(
 }
 
 interface SectionPlan {
-  groupLines: { flag: string; lines: string[] }[];
+  groupLines: { group: TeamGroup; lines: string[] }[];
   truncatedRemaining: number;
 }
 
@@ -104,20 +167,18 @@ function planSection(
   maxLines: number,
 ): SectionPlan {
   setFont(ctx, bodyFontSize, 'normal');
-  const groupLines: { flag: string; lines: string[] }[] = [];
+  const groupLines: { group: TeamGroup; lines: string[] }[] = [];
   let usedLines = 0;
   let truncatedRemaining = 0;
 
   for (let g = 0; g < groups.length; g++) {
     const group = groups[g];
-    const flagPrefix = `${group.flag}  `;
-    const flagWidth = ctx.measureText(flagPrefix).width;
+    const flagWidth = measureFlagPrefix(ctx, group);
     const idsAvailable = maxWidth - flagWidth;
     const wrapped = wrapTokens(ctx, group.ids, idsAvailable);
 
     const remainingLines = maxLines - usedLines;
     if (remainingLines <= 0) {
-      // Count remaining IDs across this and later groups
       truncatedRemaining += group.ids.length;
       for (let k = g + 1; k < groups.length; k++) {
         truncatedRemaining += groups[k].ids.length;
@@ -126,14 +187,12 @@ function planSection(
     }
 
     if (wrapped.length <= remainingLines) {
-      groupLines.push({ flag: group.flag, lines: wrapped });
+      groupLines.push({ group, lines: wrapped });
       usedLines += wrapped.length;
     } else {
-      // Take partial lines, then approximate remaining IDs in this group + later
       const taken = wrapped.slice(0, remainingLines);
-      groupLines.push({ flag: group.flag, lines: taken });
+      groupLines.push({ group, lines: taken });
       usedLines += taken.length;
-      // Approximate IDs not shown by counting commas in lines we didn't render
       const skippedText = wrapped.slice(remainingLines).join(' ');
       const skippedIds = skippedText
         .split(',')
@@ -162,6 +221,7 @@ function renderSection(
   lineHeight: number,
   groupGap: number,
   leftX: number,
+  flags: Map<string, HTMLImageElement>,
 ): number {
   let y = startY;
 
@@ -174,15 +234,14 @@ function renderSection(
   setFont(ctx, bodyFontSize, 'normal');
   ctx.fillStyle = '#1f2937';
 
-  for (const group of plan.groupLines) {
-    const flagPrefix = `${group.flag}  `;
-    const flagW = ctx.measureText(flagPrefix).width;
-    for (let i = 0; i < group.lines.length; i++) {
+  for (const item of plan.groupLines) {
+    const flagWidth = measureFlagPrefix(ctx, item.group);
+    for (let i = 0; i < item.lines.length; i++) {
       if (i === 0) {
-        ctx.fillText(flagPrefix, leftX, y);
-        ctx.fillText(group.lines[i], leftX + flagW, y);
+        drawFlagPrefix(ctx, item.group, leftX, y, flags, bodyFontSize);
+        ctx.fillText(item.lines[i], leftX + flagWidth, y);
       } else {
-        ctx.fillText(group.lines[i], leftX + flagW, y);
+        ctx.fillText(item.lines[i], leftX + flagWidth, y);
       }
       y += lineHeight;
     }
@@ -236,6 +295,12 @@ export async function renderTradeImage(lists: TradeLists): Promise<Blob> {
   const dupTotal = dupPairs.length;
   const missTotal = missPairs.length;
 
+  // Pre-load flag SVGs for all teams that will appear in the image.
+  const usedFlagCodes: string[] = [];
+  for (const g of dupGroups) if (g.flagCode) usedFlagCodes.push(g.flagCode);
+  for (const g of missGroups) if (g.flagCode) usedFlagCodes.push(g.flagCode);
+  const flags = await preloadFlags(usedFlagCodes);
+
   // Header
   let y = PADDING + 70;
   ctx.fillStyle = '#0f172a';
@@ -269,7 +334,6 @@ export async function renderTradeImage(lists: TradeLists): Promise<Blob> {
   const bodyBottom = footerY - 40;
   const bodyHeight = bodyBottom - bodyTop;
 
-  // Reserve header (56px) + breathing space per section; split rest in half.
   const sectionHeaderReserve = 56;
   const halfHeight = Math.floor(bodyHeight / 2);
   const linesPerSection = Math.max(
@@ -277,7 +341,6 @@ export async function renderTradeImage(lists: TradeLists): Promise<Blob> {
     Math.floor((halfHeight - sectionHeaderReserve) / lineHeight) - 1,
   );
 
-  // Plan both sections; if one section under-uses its budget, redistribute.
   let dupPlan = planSection(
     ctx,
     dupGroups,
@@ -294,11 +357,11 @@ export async function renderTradeImage(lists: TradeLists): Promise<Blob> {
   );
 
   const dupUsedLines = dupPlan.groupLines.reduce(
-    (acc, g) => acc + g.lines.length,
+    (acc, item) => acc + item.lines.length,
     0,
   );
   const missUsedLines = missPlan.groupLines.reduce(
-    (acc, g) => acc + g.lines.length,
+    (acc, item) => acc + item.lines.length,
     0,
   );
   const totalBudget = linesPerSection * 2;
@@ -336,6 +399,7 @@ export async function renderTradeImage(lists: TradeLists): Promise<Blob> {
       lineHeight,
       groupGap,
       contentLeft,
+      flags,
     );
     y += 28;
   } else {
@@ -362,6 +426,7 @@ export async function renderTradeImage(lists: TradeLists): Promise<Blob> {
       lineHeight,
       groupGap,
       contentLeft,
+      flags,
     );
   } else {
     setFont(ctx, 40, 'bold');
