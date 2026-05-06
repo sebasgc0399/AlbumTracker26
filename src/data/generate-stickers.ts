@@ -1,0 +1,151 @@
+import { writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import { TEAMS } from "./teams.ts";
+
+interface Sticker {
+  id: string;
+  number: string;
+  name: string;
+  team: string;
+  teamName: string;
+  group: string;
+  section: string;
+  type: string;
+  position: number;
+}
+
+const INTRO_NAMES: readonly string[] = [
+  "Logo FIFA World Cup 26",
+  "Trofeo Mundial",
+  "Mascota Oficial Maple",
+  "Mascota Oficial Zayu",
+  "Mascota Oficial Clutch",
+  "Balón Oficial",
+  "Sedes Estados Unidos",
+  "Sedes México",
+  "Sedes Canadá",
+];
+
+const MUSEUM_NAMES: readonly string[] = [
+  "Campeón 1930 - Uruguay",
+  "Campeón 1934 - Italia",
+  "Campeón 1950 - Uruguay",
+  "Campeón 1970 - Brasil",
+  "Campeón 1974 - Alemania",
+  "Campeón 1978 - Argentina",
+  "Campeón 1986 - Argentina",
+  "Campeón 1998 - Francia",
+  "Campeón 2010 - España",
+  "Campeón 2018 - Francia",
+  "Campeón 2022 - Argentina",
+];
+
+function buildIntro(): Sticker[] {
+  return INTRO_NAMES.map((name, idx) => {
+    const position = idx + 1;
+    const id = `FWC${position}`;
+    return {
+      id,
+      number: id,
+      name,
+      team: "FWC",
+      teamName: "Introducción",
+      group: "special",
+      section: "intro",
+      type: "special",
+      position,
+    };
+  });
+}
+
+function buildMuseum(): Sticker[] {
+  return MUSEUM_NAMES.map((name, idx) => {
+    const position = idx + 1;
+    const number = position + 9;
+    const id = `FWC${number}`;
+    return {
+      id,
+      number: id,
+      name,
+      team: "FWC",
+      teamName: "Introducción",
+      group: "special",
+      section: "museum",
+      type: "special",
+      position,
+    };
+  });
+}
+
+function buildTeams(): Sticker[] {
+  const result: Sticker[] = [];
+  for (const team of TEAMS) {
+    for (let position = 1; position <= 20; position++) {
+      const id = `${team.code}${position}`;
+      let name: string;
+      let type: string;
+      if (position === 1) {
+        name = `Escudo ${team.name}`;
+        type = "badge";
+      } else if (position === 2) {
+        name = `Foto de equipo ${team.name}`;
+        type = "team_photo";
+      } else {
+        name = `Jugador ${position - 2}`;
+        type = "player";
+      }
+      result.push({
+        id,
+        number: id,
+        name,
+        team: team.code,
+        teamName: team.name,
+        group: team.group,
+        section: "team",
+        type,
+        position,
+      });
+    }
+  }
+  return result;
+}
+
+function buildCocaCola(): Sticker[] {
+  return Array.from({ length: 12 }, (_, idx) => {
+    const position = idx + 1;
+    const id = `CC${position}`;
+    return {
+      id,
+      number: id,
+      name: `Coca-Cola Especial ${position}`,
+      team: "CC",
+      teamName: "Coca-Cola",
+      group: "special",
+      section: "cocacola",
+      type: "special",
+      position,
+    };
+  });
+}
+
+const intro = buildIntro();
+const museum = buildMuseum();
+const teams = buildTeams();
+const cocacola = buildCocaCola();
+const all: Sticker[] = [...intro, ...museum, ...teams, ...cocacola];
+
+console.log(`Intro:    ${intro.length}`);
+console.log(`Museo:    ${museum.length}`);
+console.log(`Equipos:  ${teams.length}`);
+console.log(`CocaCola: ${cocacola.length}`);
+console.log(`Total:    ${all.length}`);
+
+if (all.length !== 992) {
+  throw new Error(`Total esperado 992, obtenido ${all.length}`);
+}
+
+const here = dirname(fileURLToPath(import.meta.url));
+const outPath = join(here, "stickers.json");
+writeFileSync(outPath, JSON.stringify(all, null, 2), "utf8");
+console.log(`Escrito: ${outPath}`);
