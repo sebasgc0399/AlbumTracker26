@@ -4,7 +4,21 @@
       "Bash(ls -la \"d:/Proyectos VS CODE/AlbumTracker26/.claude/\" 2>/dev/null; ls -la \"d:/Proyectos VS CODE/AlbumTracker26/\" | grep -i mcp; ls \"C:/Users/sebas/.claude/\" 2>/dev/null)",
       "Read(//c/Users/sebas/.claude/**)",
       "Bash(claude mcp *)",
-      "Bash(claude plugin *)"
+      "Bash(claude plugin *)",
+      "Bash(npm -v)",
+      "Bash(npx -y firebase-tools@latest --version)",
+      "Bash(npm view *)",
+      "Bash(npx -y firebase-tools@15.16.0 --version)",
+      "Bash(npm cache *)",
+      "Bash(ls \"C:/Users/sebas/AppData/Local/npm-cache/_logs/\" 2>&1 | tail -3)",
+      "Read(//c/Users/sebas/AppData/Local/npm-cache/_logs/**)",
+      "Bash(npx -y firebase-tools@15.16.0 mcp --help)"
     ]
+  },
+  "enabledPlugins": {
+    "tailwind-v4-shadcn@claude-skills": true,
+    "react-best-practices@claude-skills": true,
+    "frontend-design@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true
   }
 }
