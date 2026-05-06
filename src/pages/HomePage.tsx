@@ -34,7 +34,9 @@ export default function HomePage() {
       <header className="sticky top-0 z-10 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto flex max-w-md items-center gap-2">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-bold text-primary">AlbumTracker26</h1>
+            <h1 className="text-xl font-bold text-primary">
+              AlbumTracker<span className="font-mono text-foil">26</span>
+            </h1>
             <p className="text-xs text-muted-foreground">Panini Mundial 2026</p>
           </div>
           <ThemeToggle />

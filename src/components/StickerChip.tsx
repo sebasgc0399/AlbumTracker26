@@ -18,6 +18,8 @@ export default function StickerChip({
   const isDuplicated = count > 1;
   const isFoil = sticker.type === 'badge';
   const isTeamPhoto = sticker.type === 'team_photo';
+  const isMuseum = sticker.section === 'museum';
+  const isCocaCola = sticker.section === 'cocacola';
 
   // En "missing-mode", las láminas que NO faltan (ya las tengo) se atenúan
   // para mantener el contexto del grid completo, pero foco visual en lo faltante.
@@ -27,7 +29,11 @@ export default function StickerChip({
     ? 'bg-muted/40 text-muted-foreground/60'
     : isOwned
       ? 'bg-primary text-primary-foreground'
-      : 'bg-muted text-muted-foreground';
+      : isCocaCola
+        ? 'bg-accent-cocacola/10 text-foreground'
+        : isMuseum
+          ? 'bg-accent-museum/10 text-foreground'
+          : 'bg-muted text-muted-foreground';
 
   // Foils get a thicker gold ring; team photos get a dashed border to differentiate.
   // En missing-mode atenuado forzamos un borde punteado para refuerzo visual.
@@ -37,7 +43,11 @@ export default function StickerChip({
       ? 'ring-2 ring-foil ring-offset-1 ring-offset-background'
       : isTeamPhoto
         ? 'border-2 border-dashed border-muted-foreground/60'
-        : 'border border-border';
+        : isCocaCola
+          ? 'ring-1 ring-accent-cocacola/40'
+          : isMuseum
+            ? 'ring-1 ring-accent-museum/40'
+            : 'border border-border';
 
   return (
     <button
@@ -48,8 +58,8 @@ export default function StickerChip({
       className={`relative flex aspect-square items-center justify-center rounded-lg p-1 text-center transition-colors active:scale-95 ${stateClasses} ${typeClasses}`}
     >
       <div className="flex flex-col items-center justify-center leading-tight">
-        <span className="text-[0.6rem] font-medium opacity-70">{sticker.team}</span>
-        <span className="text-lg font-bold tabular-nums">{sticker.position}</span>
+        <span className="font-mono text-[0.6rem] font-medium opacity-70">{sticker.team}</span>
+        <span className="font-mono text-lg font-bold tabular-nums">{sticker.position}</span>
       </div>
 
       {isFoil && !isDimmedByFilter && (

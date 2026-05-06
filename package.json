@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint src",
     "flags:sync": "node scripts/copy-flags.mjs",
+    "icons": "node scripts/generate-icons.mjs",
     "deploy": "npm run build && firebase deploy --only hosting"
   },
   "dependencies": {
@@ -31,6 +32,7 @@
     "eslint-plugin-react-refresh": "^0.4.16",
     "flag-icons": "^7.5.0",
     "globals": "^15.14.0",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.18.0",

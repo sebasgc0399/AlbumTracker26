@@ -64,7 +64,7 @@ export default function StickerDetail({ sticker, entry, onClose }: StickerDetail
 
         <div className="mb-4 text-center">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {sticker.id} · {sticker.teamName}
+            <span className="font-mono">{sticker.id}</span> · {sticker.teamName}
           </p>
           <h2 className="mt-1 text-xl font-bold text-foreground">
             {sticker.name}
