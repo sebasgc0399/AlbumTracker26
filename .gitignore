@@ -34,3 +34,6 @@ dist-ssr
 # Firebase
 .firebase
 firebase-debug.log
+
+# Playwright MCP snapshots (generados por sesiones de testing)
+.playwright-mcp/
