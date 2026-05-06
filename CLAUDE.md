@@ -160,6 +160,18 @@ Es un proyecto personal de fin de semana, no enterprise. Las decisiones prioriza
 
 Si una feature parece overkill para "1 usuario, 1 álbum, 1 fin de semana de dev", probablemente lo es.
 
+## Museo FIFA: pendiente de verificar contra álbum físico
+
+Las 11 láminas del museo (`FWC10`–`FWC20`) tienen nombres heredados de la SPEC inicial que probablemente están equivocados. El subset de campeones históricos no está confirmado contra el álbum físico — y la app oficial Panini muestra un subset distinto del que tengo guardado.
+
+**Mi catálogo actual (`src/data/generate-stickers.ts` → `MUSEUM_NAMES`):**
+1930 Uruguay, 1934 Italia, 1950 Uruguay, 1970 Brasil, 1974 Alemania, 1978 Argentina, 1986 Argentina, 1998 Francia, 2010 España, 2018 Francia, 2022 Argentina.
+
+**Lo que muestra la app Panini (#970–#980):**
+1934 Italia, 1950 Uruguay, 1954 Alemania FR, 1962 Brasil, 1974 Alemania FR, 1986 Argentina, 1994 Brasil, 2002 Brasil, 2006 Italia, 2014 Alemania, 2022 Argentina.
+
+Solo coinciden 4 (1934 Italia, 1950 Uruguay, 1986 Argentina, 2022 Argentina). El árbitro es el álbum físico — cuando se pueda verificar, ajustar `MUSEUM_NAMES` al subset real y bumpear DB version. Hasta entonces, dejar como está (los IDs FWC10–FWC20 son estables, solo cambian los nombres asociados).
+
 ## Nombres de jugadores: pendientes de re-verificar
 
 La fuente de los 864 nombres en [src/data/players.ts](src/data/players.ts) es una mezcla de la app oficial Panini (que el usuario me pasó por capturas) y correcciones del jugador real conocido cuando la app tenía typos OCR claros. Hay sospechas concretas de typos OCR donde mi versión difiere de la app — el árbitro final es el álbum físico impreso. Cuando el usuario pegue la lámina o pueda comparar, validamos cada uno y sacamos el item de esta lista.
