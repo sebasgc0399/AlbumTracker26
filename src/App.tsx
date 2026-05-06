@@ -11,6 +11,7 @@ import CambiatonPage from '@/pages/CambiatonPage';
 import SettingsPage from '@/pages/SettingsPage';
 import BottomNav from '@/components/BottomNav';
 import MilestoneOverlay from '@/components/MilestoneOverlay';
+import UpdatePrompt from '@/components/UpdatePrompt';
 import { MilestoneProvider } from '@/hooks/useMilestoneWatcher';
 import { subscribeToSystemTheme } from '@/lib/theme';
 
@@ -41,6 +42,7 @@ export default function App() {
         </Routes>
         <ConditionalBottomNav />
         <MilestoneOverlay />
+        <UpdatePrompt />
       </MilestoneProvider>
     </BrowserRouter>
   );

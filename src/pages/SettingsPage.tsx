@@ -1,7 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getStoredTheme, setTheme, type Theme } from '@/lib/theme';
 import { getSoundEnabled, setSoundEnabled } from '@/lib/feedback';
+import {
+  exportCollection,
+  downloadBackup,
+  parseBackup,
+  importCollection,
+  type BackupFile,
+} from '@/lib/safety';
+import InfoToast, { type InfoToastMessage } from '@/components/InfoToast';
 
 const THEME_OPTIONS: { value: Theme; label: string; hint: string }[] = [
   { value: 'light', label: 'Claro', hint: 'Fondo blanco siempre' },
@@ -9,9 +17,20 @@ const THEME_OPTIONS: { value: Theme; label: string; hint: string }[] = [
   { value: 'system', label: 'Sistema', hint: 'Sigue al sistema operativo' },
 ];
 
+interface PendingImport {
+  backup: BackupFile;
+  totalEntries: number;
+  ownedEntries: number;
+}
+
 export default function SettingsPage() {
   const [theme, setThemeState] = useState<Theme>('system');
   const [sound, setSoundState] = useState<boolean>(false);
+  const [toast, setToast] = useState<InfoToastMessage | null>(null);
+  const [pending, setPending] = useState<PendingImport | null>(null);
+  const [busy, setBusy] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const toastIdRef = useRef(0);
 
   useEffect(() => {
     setThemeState(getStoredTheme());
@@ -26,6 +45,64 @@ export default function SettingsPage() {
   function handleSoundChange(enabled: boolean) {
     setSoundState(enabled);
     setSoundEnabled(enabled);
+  }
+
+  function showToast(text: string, variant: InfoToastMessage['variant']) {
+    toastIdRef.current += 1;
+    setToast({ id: toastIdRef.current, text, variant });
+  }
+
+  async function handleExport() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const backup = await exportCollection();
+      downloadBackup(backup);
+      showToast(`Respaldo descargado · ${backup.entries.length} láminas`, 'success');
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Error desconocido';
+      showToast(`Error al exportar: ${msg}`, 'destructive');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function handleImportClick() {
+    fileInputRef.current?.click();
+  }
+
+  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const backup = parseBackup(text);
+      const ownedEntries = backup.entries.filter((e) => e.count > 0).length;
+      setPending({
+        backup,
+        totalEntries: backup.entries.length,
+        ownedEntries,
+      });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Error desconocido';
+      showToast(`Archivo inválido: ${msg}`, 'destructive');
+    }
+  }
+
+  async function runImport(mode: 'replace' | 'merge') {
+    if (!pending || busy) return;
+    setBusy(true);
+    try {
+      const result = await importCollection(pending.backup, mode);
+      setPending(null);
+      showToast(`Progreso importado · ${result.imported} láminas`, 'success');
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Error desconocido';
+      showToast(`Error al importar: ${msg}`, 'destructive');
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -114,12 +191,129 @@ export default function SettingsPage() {
           </label>
         </section>
 
+        <section className="mb-6">
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Respaldo de progreso
+          </h2>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={handleExport}
+              disabled={busy}
+              className="min-h-11 rounded-lg bg-primary px-4 py-3 text-sm font-bold text-primary-foreground transition-colors active:bg-primary/80 disabled:opacity-60"
+            >
+              Exportar progreso
+            </button>
+            <button
+              type="button"
+              onClick={handleImportClick}
+              disabled={busy}
+              className="min-h-11 rounded-lg border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground transition-colors active:bg-muted disabled:opacity-60"
+            >
+              Importar progreso
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json,.json"
+              onChange={handleFileChange}
+              className="hidden"
+              aria-hidden="true"
+              tabIndex={-1}
+            />
+            <p className="px-1 text-xs text-muted-foreground">
+              Descargá un archivo JSON con tu progreso o restauralo en otro dispositivo.
+            </p>
+          </div>
+        </section>
+
         <section className="rounded-lg border border-border bg-muted/40 p-3">
           <p className="text-xs text-muted-foreground">
             AlbumTracker26 — todo se guarda en este dispositivo, sin backend.
           </p>
         </section>
       </main>
+
+      <InfoToast message={toast} onDismiss={() => setToast(null)} />
+
+      {pending && (
+        <ImportConfirmDialog
+          pending={pending}
+          busy={busy}
+          onCancel={() => setPending(null)}
+          onMerge={() => runImport('merge')}
+          onReplace={() => runImport('replace')}
+        />
+      )}
+    </div>
+  );
+}
+
+interface ImportConfirmDialogProps {
+  pending: PendingImport;
+  busy: boolean;
+  onCancel: () => void;
+  onMerge: () => void;
+  onReplace: () => void;
+}
+
+function ImportConfirmDialog({
+  pending,
+  busy,
+  onCancel,
+  onMerge,
+  onReplace,
+}: ImportConfirmDialogProps) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Confirmar importación"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 px-4 pb-4 pt-16 backdrop-blur-sm sm:items-center sm:pb-16"
+      onClick={onCancel}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="pointer-events-auto w-full max-w-md rounded-2xl border border-border bg-background p-5 shadow-2xl"
+      >
+        <h3 className="text-lg font-bold text-foreground">Importar progreso</h3>
+        <p className="mt-2 text-sm text-foreground">
+          El respaldo tiene{' '}
+          <span className="font-semibold">{pending.totalEntries}</span> entradas (
+          <span className="font-semibold">{pending.ownedEntries}</span> con count &gt; 0).
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          ¿Querés <span className="font-semibold">reemplazar</span> tu progreso actual o{' '}
+          <span className="font-semibold">combinar</span> (preserva el mayor count por
+          lámina)?
+        </p>
+        <div className="mt-5 flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={onMerge}
+            disabled={busy}
+            className="min-h-11 rounded-lg bg-primary px-4 py-3 text-sm font-bold text-primary-foreground transition-colors active:bg-primary/80 disabled:opacity-60"
+          >
+            Combinar
+          </button>
+          <button
+            type="button"
+            onClick={onReplace}
+            disabled={busy}
+            className="min-h-11 rounded-lg bg-destructive px-4 py-3 text-sm font-bold text-destructive-foreground transition-colors active:bg-destructive/80 disabled:opacity-60"
+          >
+            Reemplazar
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={busy}
+            className="min-h-11 rounded-lg border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground transition-colors active:bg-muted disabled:opacity-60"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

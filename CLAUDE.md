@@ -152,6 +152,7 @@ Configuración en [.mcp.json](.mcp.json) (project-scoped) y heredada de user sco
 - **`navigator.vibrate` no existe en iOS Safari** — el haptic feedback de F5 es opcional y debe estar tras un check `if ('vibrate' in navigator)`. No assumir presencia.
 - **Tailwind class purge en JSON dinámico**: si una clase Tailwind se construye dinámicamente (ej. `bg-${color}-500`), Tailwind v4 no la detecta y la purga. Para colores condicionales por estado de lámina, usar mapeo explícito (`const COLORS = { owned: 'bg-green-500', ... }`).
 - **IndexedDB en modo incógnito**: Firefox/Safari incógnito tienen quota cero o muy baja. La app puede aparentar funcionar y perder datos al cerrar pestaña. No es bug — es comportamiento del navegador en private mode.
+- **Migraciones Dexie nunca tocan la tabla `collection`**: el catálogo (`stickers`) es re-seedable, los datos del usuario no. Si una migración necesita transformar la collection, usá `modify()` (mutación in-place por entry) — nunca `clear()` + `bulkAdd()`. Un solo `collection.clear()` borra todo el progreso del usuario sin recovery posible. La regla es estricta: el único lugar que puede llamar `collection.clear()` es la función `importCollection()` en modo 'replace' de `src/lib/safety.ts`, donde el usuario explícitamente confirmó la acción destructiva.
 
 ## Filosofía del proyecto
 
