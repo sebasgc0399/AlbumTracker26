@@ -1,5 +1,5 @@
 import type { CollectionEntry, Sticker } from '@/db/database';
-import FlagIcon from './FlagIcon';
+import TeamFlag from './TeamFlag';
 import { flagInfoForTeamCode } from '@/utils/flagFor';
 
 interface SearchResultProps {
@@ -32,17 +32,7 @@ export default function SearchResult({
       aria-label={`Sumar lámina ${sticker.id}${isOwned ? `, tengo ${count}` : ''}`}
       className={`flex h-16 w-full items-center gap-3 rounded-lg border border-border px-3 text-left transition-colors ${flashClasses}`}
     >
-      {flagInfo.flagCode ? (
-        <FlagIcon
-          code={flagInfo.flagCode}
-          alt=""
-          className="w-8 shrink-0 shadow-sm"
-        />
-      ) : (
-        <span className="shrink-0 text-2xl leading-none" aria-hidden="true">
-          {flagInfo.emoji}
-        </span>
-      )}
+      <TeamFlag info={flagInfo} alt="" className="w-8 shrink-0 shadow-sm" />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
           <span className="font-mono text-sm font-bold tabular-nums text-foreground">

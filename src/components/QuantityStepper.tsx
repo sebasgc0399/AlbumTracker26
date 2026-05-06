@@ -5,6 +5,7 @@ interface QuantityStepperProps {
   onChange: (next: number) => void;
   min?: number;
   max?: number;
+  compact?: boolean;
 }
 
 const LONG_PRESS_DELAY = 500;
@@ -15,6 +16,7 @@ export default function QuantityStepper({
   onChange,
   min = 0,
   max = 99,
+  compact = false,
 }: QuantityStepperProps) {
   const timeoutRef = useRef<number | null>(null);
   const intervalRef = useRef<number | null>(null);
@@ -70,8 +72,14 @@ export default function QuantityStepper({
   const decDisabled = value <= min;
   const incDisabled = value >= max;
 
+  const buttonSize = compact ? 'h-9 w-9 text-lg' : 'h-12 w-12 text-2xl';
+  const valueSize = compact
+    ? 'min-w-7 text-xl'
+    : 'min-w-[3rem] text-3xl';
+  const groupGap = compact ? 'gap-2' : 'gap-4';
+
   return (
-    <div className="flex items-center justify-center gap-4">
+    <div className={`flex items-center justify-center ${groupGap}`}>
       <button
         type="button"
         aria-label="Disminuir cantidad"
@@ -80,13 +88,13 @@ export default function QuantityStepper({
         onPointerUp={clearTimers}
         onPointerLeave={clearTimers}
         onPointerCancel={clearTimers}
-        className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-muted text-2xl font-bold text-foreground transition-colors active:bg-border disabled:cursor-not-allowed disabled:opacity-40"
+        className={`flex items-center justify-center rounded-full border border-border bg-muted font-bold text-foreground transition-colors active:bg-border disabled:cursor-not-allowed disabled:opacity-40 ${buttonSize}`}
       >
         -
       </button>
 
       <span
-        className="min-w-[3rem] text-center text-3xl font-bold tabular-nums text-foreground"
+        className={`text-center font-bold tabular-nums text-foreground ${valueSize}`}
         aria-live="polite"
       >
         {value}
@@ -100,7 +108,7 @@ export default function QuantityStepper({
         onPointerUp={clearTimers}
         onPointerLeave={clearTimers}
         onPointerCancel={clearTimers}
-        className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-2xl font-bold text-primary-foreground transition-colors active:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
+        className={`flex items-center justify-center rounded-full bg-primary font-bold text-primary-foreground transition-colors active:opacity-80 disabled:cursor-not-allowed disabled:opacity-40 ${buttonSize}`}
       >
         +
       </button>

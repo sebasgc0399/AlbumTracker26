@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { MessageSquare } from 'lucide-react';
 import { useTradeableLists } from '@/db/hooks';
 import { useLocalStoragePref } from '@/hooks/useLocalStoragePref';
 import { formatTradeList } from '@/utils/formatTradeList';
@@ -16,10 +17,7 @@ function isAbortError(err: unknown): boolean {
 
 export default function ShareListButton() {
   const lists = useTradeableLists();
-  const [includeCC, setIncludeCC] = useLocalStoragePref<boolean>(
-    'share.includeCC',
-    false,
-  );
+  const [includeCC] = useLocalStoragePref<boolean>('share.includeCC', false);
   const [toast, setToast] = useState<Toast | null>(null);
 
   useEffect(() => {
@@ -70,26 +68,16 @@ export default function ShareListButton() {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <>
       <button
         type="button"
         onClick={handleClick}
         disabled={isLoading || isEmpty}
-        className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-colors active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <span aria-hidden="true">💬</span>
-        <span>{isLoading ? 'Cargando…' : 'Compartir lista'}</span>
+        <MessageSquare aria-hidden="true" className="h-4 w-4" />
+        <span>{isLoading ? 'Cargando…' : 'Lista'}</span>
       </button>
-
-      <label className="inline-flex items-center gap-2 text-xs text-foreground">
-        <input
-          type="checkbox"
-          checked={includeCC}
-          onChange={(e) => setIncludeCC(e.target.checked)}
-          className="h-4 w-4 accent-primary"
-        />
-        Incluir Coca-Cola
-      </label>
 
       {toast ? (
         <div
@@ -100,6 +88,6 @@ export default function ShareListButton() {
           {toast.message}
         </div>
       ) : null}
-    </div>
+    </>
   );
 }

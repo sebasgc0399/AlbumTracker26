@@ -7,18 +7,16 @@ import { useLocalStoragePref } from '@/hooks/useLocalStoragePref';
 import { decodeTradeList, type EncodedPayload } from '@/utils/encodeTradeList';
 import { matchLists, type MatchResult } from '@/utils/matchLists';
 import { flagInfoForTeamName } from '@/utils/flagFor';
-import FlagIcon from '@/components/FlagIcon';
+import TeamFlag from '@/components/TeamFlag';
 import TeamGroupHeader from '@/components/TeamGroupHeader';
 
 function teamFlagSlot(teamName: string) {
-  const info = flagInfoForTeamName(teamName);
-  if (info.flagCode) {
-    return <FlagIcon code={info.flagCode} alt="" className="w-8 shadow-sm" />;
-  }
   return (
-    <span className="text-2xl leading-none" aria-hidden="true">
-      {info.emoji}
-    </span>
+    <TeamFlag
+      info={flagInfoForTeamName(teamName)}
+      alt=""
+      className="w-8 shadow-sm"
+    />
   );
 }
 

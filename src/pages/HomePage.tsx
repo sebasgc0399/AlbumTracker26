@@ -1,3 +1,4 @@
+import { ArrowLeftRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { TEAMS } from '@/data/teams';
 import { useCollection, useProgress } from '@/db/hooks';
@@ -106,9 +107,11 @@ export default function HomePage() {
             onClick={() => navigate('/cambiaton')}
             className="flex w-full items-center gap-3 rounded-xl bg-warning px-4 py-4 text-left text-warning-foreground shadow-sm transition-transform active:scale-[0.98]"
           >
-            <span className="text-3xl leading-none" aria-hidden="true">
-              🔄
-            </span>
+            <ArrowLeftRight
+              aria-hidden="true"
+              strokeWidth={2}
+              className="h-7 w-7 shrink-0"
+            />
             <div className="flex-1">
               <h3 className="text-base font-bold">Modo Cambiaton</h3>
               <p className="text-xs opacity-90">

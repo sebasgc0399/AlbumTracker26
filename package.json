@@ -17,6 +17,7 @@
     "canvas-confetti": "^1.9.4",
     "dexie": "^4.0.10",
     "dexie-react-hooks": "^1.1.7",
+    "lucide-react": "^1.14.0",
     "lz-string": "^1.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

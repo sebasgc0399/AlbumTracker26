@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Image as ImageIcon } from 'lucide-react';
 import { useTradeableLists } from '@/db/hooks';
 import { useLocalStoragePref } from '@/hooks/useLocalStoragePref';
 import { renderTradeImage } from '@/utils/renderTradeImage';
@@ -93,11 +94,7 @@ export default function ShareImageButton() {
   }
 
   const disabled = isLoading || isEmpty || isRendering;
-  const label = isLoading
-    ? 'Cargando…'
-    : isRendering
-      ? 'Generando…'
-      : 'Compartir imagen';
+  const label = isLoading ? 'Cargando…' : isRendering ? 'Generando…' : 'Imagen';
 
   return (
     <>
@@ -105,9 +102,9 @@ export default function ShareImageButton() {
         type="button"
         onClick={handleClick}
         disabled={disabled}
-        className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition-colors active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-background px-3 py-2.5 text-sm font-semibold text-foreground shadow-sm transition-colors active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <span aria-hidden="true">🖼️</span>
+        <ImageIcon aria-hidden="true" className="h-4 w-4" />
         <span>{label}</span>
       </button>
 

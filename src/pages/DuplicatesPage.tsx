@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { ChevronsDownUp, ChevronsUpDown, Inbox } from 'lucide-react';
 import DuplicateRow from '@/components/DuplicateRow';
-import FlagIcon from '@/components/FlagIcon';
 import ShareImageButton from '@/components/ShareImageButton';
 import ShareLinkButton from '@/components/ShareLinkButton';
 import ShareListButton from '@/components/ShareListButton';
+import TeamFlag from '@/components/TeamFlag';
 import TeamGroupHeader from '@/components/TeamGroupHeader';
 import { useDuplicatesByTeam, type DuplicateEntry } from '@/db/hooks';
 import { useLocalStoragePref } from '@/hooks/useLocalStoragePref';
@@ -12,14 +13,12 @@ import { flagInfoForTeamName } from '@/utils/flagFor';
 type OrderMode = 'by-team' | 'most-duplicates';
 
 function teamFlagSlot(teamName: string) {
-  const info = flagInfoForTeamName(teamName);
-  if (info.flagCode) {
-    return <FlagIcon code={info.flagCode} alt="" className="w-8 shadow-sm" />;
-  }
   return (
-    <span className="text-2xl leading-none" aria-hidden="true">
-      {info.emoji}
-    </span>
+    <TeamFlag
+      info={flagInfoForTeamName(teamName)}
+      alt=""
+      className="w-8 shadow-sm"
+    />
   );
 }
 
@@ -60,6 +59,31 @@ export default function DuplicatesPage() {
     return total;
   }, [orderedGroups]);
 
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  const toggleTeam = (teamName: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(teamName)) next.delete(teamName);
+      else next.add(teamName);
+      return next;
+    });
+  };
+
+  const allCollapsed =
+    orderedGroups !== undefined &&
+    orderedGroups.length > 0 &&
+    orderedGroups.every(([t]) => collapsed.has(t));
+
+  const toggleAll = () => {
+    if (!orderedGroups) return;
+    if (allCollapsed) {
+      setCollapsed(new Set());
+    } else {
+      setCollapsed(new Set(orderedGroups.map(([t]) => t)));
+    }
+  };
+
   const isLoading = orderedGroups === undefined;
   const isEmpty = !isLoading && orderedGroups.length === 0;
 
@@ -76,88 +100,103 @@ export default function DuplicatesPage() {
       </header>
 
       <main className="mx-auto max-w-md px-4 py-4">
-        <section className="mb-4 flex items-center gap-2 overflow-x-auto">
-          <ShareListButton />
-          <ShareImageButton />
-          <ShareLinkButton />
-        </section>
+        <ShareSection />
 
-        <section className="mb-4 flex flex-wrap items-center gap-2">
-          <div
-            role="radiogroup"
-            aria-label="Orden"
-            className="inline-flex rounded-full border border-border bg-background p-0.5 text-xs"
-          >
-            <button
-              type="button"
-              role="radio"
-              aria-checked={order === 'by-team'}
-              onClick={() => setOrder('by-team')}
-              className={`rounded-full px-3 py-1 transition-colors ${
-                order === 'by-team'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground'
-              }`}
+        <section className="mb-4">
+          <div className="flex items-center justify-between gap-3">
+            <div
+              role="radiogroup"
+              aria-label="Orden"
+              className="inline-flex rounded-full border border-border bg-background p-0.5 text-xs"
             >
-              Por equipo
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={order === 'most-duplicates'}
-              onClick={() => setOrder('most-duplicates')}
-              className={`rounded-full px-3 py-1 transition-colors ${
-                order === 'most-duplicates'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground'
-              }`}
-            >
-              Más repetidas
-            </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={order === 'by-team'}
+                onClick={() => setOrder('by-team')}
+                className={`rounded-full px-3 py-1 transition-colors ${
+                  order === 'by-team'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                Por equipo
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={order === 'most-duplicates'}
+                onClick={() => setOrder('most-duplicates')}
+                className={`rounded-full px-3 py-1 transition-colors ${
+                  order === 'most-duplicates'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                Más repetidas
+              </button>
+            </div>
+
+            <label className="inline-flex items-center gap-2 text-xs text-foreground">
+              <input
+                type="checkbox"
+                checked={hideCC}
+                onChange={(e) => setHideCC(e.target.checked)}
+                className="h-4 w-4 accent-primary"
+              />
+              Ocultar Coca-Cola
+            </label>
           </div>
-
-          <label className="ml-auto inline-flex items-center gap-2 text-xs text-foreground">
-            <input
-              type="checkbox"
-              checked={hideCC}
-              onChange={(e) => setHideCC(e.target.checked)}
-              className="h-4 w-4 accent-primary"
-            />
-            Ocultar Coca-Cola
-          </label>
+          {!isLoading && !isEmpty && (
+            <div className="mt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={toggleAll}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground transition-colors active:bg-muted"
+              >
+                {allCollapsed ? (
+                  <ChevronsUpDown aria-hidden="true" className="h-3.5 w-3.5" />
+                ) : (
+                  <ChevronsDownUp aria-hidden="true" className="h-3.5 w-3.5" />
+                )}
+                <span>{allCollapsed ? 'Expandir todo' : 'Compactar todo'}</span>
+              </button>
+            </div>
+          )}
         </section>
 
         {isLoading ? (
           <ListSkeleton />
         ) : isEmpty ? (
-          <div className="rounded-xl border border-dashed border-border bg-background p-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              No tenés repetidas todavía.
-            </p>
-          </div>
+          <EmptyState />
         ) : (
           <ul className="flex flex-col gap-4">
             {orderedGroups.map(([teamName, entries]) => {
               const teamTotal = sumExtra(entries);
+              const isCollapsed = collapsed.has(teamName);
               return (
                 <li
                   key={teamName}
                   className="rounded-xl border border-border bg-background p-3"
                 >
-                  <div className="mb-2">
+                  <div className={isCollapsed ? '' : 'mb-2'}>
                     <TeamGroupHeader
                       flagSlot={teamFlagSlot(teamName)}
                       name={teamName}
                       countLabel={`${teamTotal} repetida${
                         teamTotal === 1 ? '' : 's'
                       }`}
+                      onToggle={() => toggleTeam(teamName)}
+                      isCollapsed={isCollapsed}
                     />
                   </div>
-                  <ul className="flex flex-col gap-1">
-                    {entries.map((entry) => (
-                      <DuplicateRow key={entry.sticker.id} entry={entry} />
-                    ))}
-                  </ul>
+                  {!isCollapsed && (
+                    <ul className="flex flex-col gap-1">
+                      {entries.map((entry) => (
+                        <DuplicateRow key={entry.sticker.id} entry={entry} />
+                      ))}
+                    </ul>
+                  )}
                 </li>
               );
             })}
@@ -177,6 +216,55 @@ function ListSkeleton() {
           className="h-32 animate-pulse rounded-xl border border-border bg-muted"
         />
       ))}
+    </div>
+  );
+}
+
+function ShareSection() {
+  const [includeCC, setIncludeCC] = useLocalStoragePref<boolean>(
+    'share.includeCC',
+    false,
+  );
+
+  return (
+    <section className="mb-4 rounded-xl border border-border bg-background p-3">
+      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        Compartir mi lista
+      </h2>
+      <div className="flex items-stretch gap-2">
+        <ShareListButton />
+        <ShareImageButton />
+        <ShareLinkButton />
+      </div>
+      <label className="mt-3 inline-flex items-center gap-2 text-xs text-foreground">
+        <input
+          type="checkbox"
+          checked={includeCC}
+          onChange={(e) => setIncludeCC(e.target.checked)}
+          className="h-4 w-4 accent-primary"
+        />
+        Incluir Coca-Cola al compartir
+      </label>
+    </section>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border bg-background px-6 py-10 text-center">
+      <Inbox
+        aria-hidden="true"
+        strokeWidth={1.5}
+        className="h-10 w-10 text-muted-foreground/60"
+      />
+      <div>
+        <p className="text-sm font-semibold text-foreground">
+          No tenés repetidas todavía
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Cuando una lámina esté con count {'>'} 1 va a aparecer acá.
+        </p>
+      </div>
     </div>
   );
 }

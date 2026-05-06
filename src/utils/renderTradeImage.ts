@@ -1,11 +1,11 @@
 import { TEAMS } from '@/data/teams';
+import { compressIdsToTokens, countIdsInToken } from './compressIds';
 import type { TradeLists } from './types';
 
 const CANVAS_W = 1080;
 const CANVAS_H = 1920;
 const PADDING = 60;
-const EMOJI_FONT_STACK =
-  "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', system-ui, sans-serif";
+const FONT_STACK = "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
 
 const FLAG_W = 52;
 const FLAG_H = 39;
@@ -17,10 +17,17 @@ function flagCodeForTeam(code: string): string | null {
   return FLAG_CODE_BY_TEAM_CODE.get(code) ?? null;
 }
 
-function fallbackEmojiForTeam(code: string): string {
-  if (code === 'CC') return '🥤';
-  if (code === 'FWC') return '🏆';
-  return '⚽';
+interface TileStyle {
+  bg: string;
+  fg: string;
+  label: string;
+}
+
+function tileStyleForTeam(code: string): TileStyle {
+  if (code === '') return { bg: '#6b7280', fg: '#ffffff', label: 'INT' };
+  if (code === 'CC') return { bg: '#dc2626', fg: '#ffffff', label: 'CC' };
+  if (code === 'FWC') return { bg: '#f59e0b', fg: '#0f172a', label: 'FW' };
+  return { bg: '#9ca3af', fg: '#ffffff', label: '·' };
 }
 
 function readIncludeCC(): boolean {
@@ -43,7 +50,8 @@ function naturalSortIds(ids: string[]): string[] {
 interface TeamGroup {
   code: string;
   flagCode: string | null;
-  ids: string[];
+  tokens: string[];
+  totalIds: number;
 }
 
 function groupIdsByTeam(
@@ -59,11 +67,15 @@ function groupIdsByTeam(
     bucket.push(id);
   }
   const teams = Array.from(map.keys()).sort((a, b) => a.localeCompare(b));
-  return teams.map((code) => ({
-    code,
-    flagCode: flagCodeForTeam(code),
-    ids: naturalSortIds(map.get(code) ?? []),
-  }));
+  return teams.map((code) => {
+    const ids = naturalSortIds(map.get(code) ?? []);
+    return {
+      code,
+      flagCode: flagCodeForTeam(code),
+      tokens: compressIdsToTokens(code, ids),
+      totalIds: ids.length,
+    };
+  });
 }
 
 function setFont(
@@ -71,7 +83,7 @@ function setFont(
   size: number,
   weight: 'normal' | 'bold' = 'normal',
 ): void {
-  ctx.font = `${weight === 'bold' ? 'bold ' : ''}${size}px ${EMOJI_FONT_STACK}`;
+  ctx.font = `${weight === 'bold' ? 'bold ' : ''}${size}px ${FONT_STACK}`;
 }
 
 function loadImage(src: string): Promise<HTMLImageElement | null> {
@@ -101,11 +113,40 @@ async function preloadFlags(
 }
 
 function measureFlagPrefix(
-  ctx: CanvasRenderingContext2D,
-  group: TeamGroup,
+  _ctx: CanvasRenderingContext2D,
+  _group: TeamGroup,
 ): number {
-  if (group.flagCode) return FLAG_W + FLAG_GAP;
-  return ctx.measureText(`${fallbackEmojiForTeam(group.code)}  `).width;
+  return FLAG_W + FLAG_GAP;
+}
+
+function drawTeamTile(
+  ctx: CanvasRenderingContext2D,
+  code: string,
+  x: number,
+  yBaseline: number,
+  bodyFontSize: number,
+): void {
+  const tileY = yBaseline - FLAG_H + Math.round(bodyFontSize * 0.2);
+  const { bg, fg, label } = tileStyleForTeam(code);
+
+  const prevFillStyle = ctx.fillStyle;
+  const prevFont = ctx.font;
+  const prevAlign = ctx.textAlign;
+  const prevBaseline = ctx.textBaseline;
+
+  ctx.fillStyle = bg;
+  ctx.fillRect(x, tileY, FLAG_W, FLAG_H);
+
+  ctx.fillStyle = fg;
+  ctx.font = `bold 20px ${FONT_STACK}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, x + FLAG_W / 2, tileY + FLAG_H / 2 + 1);
+
+  ctx.fillStyle = prevFillStyle;
+  ctx.font = prevFont;
+  ctx.textAlign = prevAlign;
+  ctx.textBaseline = prevBaseline;
 }
 
 function drawFlagPrefix(
@@ -119,16 +160,12 @@ function drawFlagPrefix(
   if (group.flagCode) {
     const img = flags.get(group.flagCode);
     if (img) {
-      // Drawing baseline-aligned: y is the text baseline; place flag so its
-      // bottom sits a few px above baseline for visual alignment.
       const flagY = y - FLAG_H + Math.round(bodyFontSize * 0.2);
       ctx.drawImage(img, x, flagY, FLAG_W, FLAG_H);
       return;
     }
   }
-  // Fallback: text emoji (CC, FWC, or SVG load error)
-  const emoji = fallbackEmojiForTeam(group.code);
-  ctx.fillText(`${emoji}  `, x, y);
+  drawTeamTile(ctx, group.code, x, y, bodyFontSize);
 }
 
 function wrapTokens(
@@ -175,13 +212,13 @@ function planSection(
     const group = groups[g];
     const flagWidth = measureFlagPrefix(ctx, group);
     const idsAvailable = maxWidth - flagWidth;
-    const wrapped = wrapTokens(ctx, group.ids, idsAvailable);
+    const wrapped = wrapTokens(ctx, group.tokens, idsAvailable);
 
     const remainingLines = maxLines - usedLines;
     if (remainingLines <= 0) {
-      truncatedRemaining += group.ids.length;
+      truncatedRemaining += group.totalIds;
       for (let k = g + 1; k < groups.length; k++) {
-        truncatedRemaining += groups[k].ids.length;
+        truncatedRemaining += groups[k].totalIds;
       }
       break;
     }
@@ -193,14 +230,17 @@ function planSection(
       const taken = wrapped.slice(0, remainingLines);
       groupLines.push({ group, lines: taken });
       usedLines += taken.length;
-      const skippedText = wrapped.slice(remainingLines).join(' ');
-      const skippedIds = skippedText
+      const skippedTokens = wrapped
+        .slice(remainingLines)
+        .join(' ')
         .split(',')
         .map((s) => s.trim())
-        .filter((s) => s.length > 0).length;
+        .filter((s) => s.length > 0);
+      let skippedIds = 0;
+      for (const t of skippedTokens) skippedIds += countIdsInToken(t);
       truncatedRemaining += skippedIds;
       for (let k = g + 1; k < groups.length; k++) {
-        truncatedRemaining += groups[k].ids.length;
+        truncatedRemaining += groups[k].totalIds;
       }
       break;
     }
@@ -212,7 +252,6 @@ function planSection(
 function renderSection(
   ctx: CanvasRenderingContext2D,
   startY: number,
-  headerEmoji: string,
   headerLabel: string,
   total: number,
   headerColor: string,
@@ -228,7 +267,7 @@ function renderSection(
   setFont(ctx, 40, 'bold');
   ctx.fillStyle = headerColor;
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText(`${headerEmoji} ${headerLabel} (${total})`, leftX, y);
+  ctx.fillText(`${headerLabel} (${total})`, leftX, y);
   y += 56;
 
   setFont(ctx, bodyFontSize, 'normal');
@@ -316,7 +355,11 @@ export async function renderTradeImage(lists: TradeLists): Promise<Blob> {
 
   setFont(ctx, 32, 'normal');
   ctx.fillStyle = '#0f172a';
-  ctx.fillText(`🟢 ${dupTotal}  ·  🔴 ${missTotal}`, contentLeft, y);
+  ctx.fillText(
+    `${dupTotal} cambio  ·  ${missTotal} busco`,
+    contentLeft,
+    y,
+  );
   y += 40;
 
   // Separator
@@ -336,9 +379,13 @@ export async function renderTradeImage(lists: TradeLists): Promise<Blob> {
 
   const sectionHeaderReserve = 56;
   const halfHeight = Math.floor(bodyHeight / 2);
+  // Cada team consume lineHeight + groupGap (gap entre teams). Antes este cálculo
+  // sub-estimaba la altura porque omitía el groupGap, y con la compresión de IDs
+  // (cada team cabe en 1 línea) eso causaba overflow del body sobre el footer.
   const linesPerSection = Math.max(
     1,
-    Math.floor((halfHeight - sectionHeaderReserve) / lineHeight) - 1,
+    Math.floor((halfHeight - sectionHeaderReserve) / (lineHeight + groupGap)) -
+      1,
   );
 
   let dupPlan = planSection(
@@ -390,7 +437,6 @@ export async function renderTradeImage(lists: TradeLists): Promise<Blob> {
     y = renderSection(
       ctx,
       y,
-      '🟢',
       'CAMBIO',
       dupTotal,
       '#16a34a',
@@ -405,7 +451,7 @@ export async function renderTradeImage(lists: TradeLists): Promise<Blob> {
   } else {
     setFont(ctx, 40, 'bold');
     ctx.fillStyle = '#16a34a';
-    ctx.fillText('🟢 CAMBIO (0)', contentLeft, y);
+    ctx.fillText('CAMBIO (0)', contentLeft, y);
     y += 56;
     setFont(ctx, bodyFontSize - 2, 'normal');
     ctx.fillStyle = '#6b7280';
@@ -417,7 +463,6 @@ export async function renderTradeImage(lists: TradeLists): Promise<Blob> {
     y = renderSection(
       ctx,
       y,
-      '🔴',
       'BUSCO',
       missTotal,
       '#dc2626',
@@ -431,7 +476,7 @@ export async function renderTradeImage(lists: TradeLists): Promise<Blob> {
   } else {
     setFont(ctx, 40, 'bold');
     ctx.fillStyle = '#dc2626';
-    ctx.fillText('🔴 BUSCO (0)', contentLeft, y);
+    ctx.fillText('BUSCO (0)', contentLeft, y);
     y += 56;
     setFont(ctx, bodyFontSize - 2, 'normal');
     ctx.fillStyle = '#6b7280';

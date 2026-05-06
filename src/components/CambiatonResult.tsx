@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Check, X, Copy, HelpCircle } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { Sticker } from '@/db/database';
 import { feedback, type FeedbackKind } from '@/lib/feedback';
 
@@ -23,7 +25,7 @@ interface CambiatonResultProps {
 interface StateConfig {
   bg: string;
   text: string;
-  icon: string;
+  Icon: LucideIcon;
   label: string;
 }
 
@@ -31,25 +33,25 @@ const STATE_CONFIG: Record<CambiatonState, StateConfig> = {
   serves: {
     bg: 'bg-success',
     text: 'text-success-foreground',
-    icon: '🟢',
+    Icon: Check,
     label: 'ME SIRVE',
   },
   have: {
     bg: 'bg-destructive',
     text: 'text-destructive-foreground',
-    icon: '🔴',
+    Icon: X,
     label: 'YA LA TENGO',
   },
   duplicate: {
     bg: 'bg-warning',
     text: 'text-warning-foreground',
-    icon: '🟡',
+    Icon: Copy,
     label: 'TENGO REPETIDA',
   },
   invalid: {
     bg: 'bg-muted',
     text: 'text-muted-foreground',
-    icon: '⚪',
+    Icon: HelpCircle,
     label: 'ID NO EXISTE',
   },
 };
@@ -98,9 +100,11 @@ export default function CambiatonResult({
       )}
 
       <div className="flex h-full flex-col items-center justify-center gap-2 px-4 py-3 text-center">
-        <span className="text-4xl leading-none" aria-hidden="true">
-          {config.icon}
-        </span>
+        <config.Icon
+          aria-hidden="true"
+          strokeWidth={2.5}
+          className="h-10 w-10"
+        />
         <p className="text-lg font-bold uppercase tracking-wide">
           {config.label}
         </p>

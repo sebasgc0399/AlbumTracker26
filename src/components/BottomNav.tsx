@@ -1,16 +1,18 @@
+import { Home, Search, ArrowLeftRight, Target } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 interface NavTab {
   to: string;
   label: string;
-  icon: string;
+  Icon: LucideIcon;
 }
 
 const TABS: readonly NavTab[] = [
-  { to: '/', label: 'Inicio', icon: '🏠' },
-  { to: '/search', label: 'Buscar', icon: '🔍' },
-  { to: '/duplicates', label: 'Repetidas', icon: '🔄' },
-  { to: '/missing', label: 'Me Falta', icon: '🎯' },
+  { to: '/', label: 'Inicio', Icon: Home },
+  { to: '/search', label: 'Buscar', Icon: Search },
+  { to: '/duplicates', label: 'Repetidas', Icon: ArrowLeftRight },
+  { to: '/missing', label: 'Me Falta', Icon: Target },
 ];
 
 export default function BottomNav() {
@@ -28,22 +30,19 @@ export default function BottomNav() {
               end={tab.to === '/'}
               className={({ isActive }) =>
                 `flex h-14 flex-col items-center justify-center gap-0.5 text-[0.7rem] transition-colors ${
-                  isActive
-                    ? 'font-bold text-primary'
-                    : 'text-muted-foreground'
+                  isActive ? 'font-bold text-primary' : 'text-muted-foreground'
                 }`
               }
             >
               {({ isActive }) => (
                 <>
-                  <span
+                  <tab.Icon
                     aria-hidden="true"
-                    className={`text-xl leading-none transition-opacity ${
-                      isActive ? 'opacity-100' : 'opacity-60'
+                    strokeWidth={isActive ? 2.5 : 2}
+                    className={`h-5 w-5 transition-opacity ${
+                      isActive ? 'opacity-100' : 'opacity-70'
                     }`}
-                  >
-                    {tab.icon}
-                  </span>
+                  />
                   <span>{tab.label}</span>
                 </>
               )}

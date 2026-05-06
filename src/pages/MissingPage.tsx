@@ -2,21 +2,47 @@ import { useMissingByTeam } from '@/db/hooks';
 import { useLocalStoragePref } from '@/hooks/useLocalStoragePref';
 import { ALMOST_COMPLETE_THRESHOLD } from '@/utils/constants';
 import { flagInfoForTeamName } from '@/utils/flagFor';
-import FlagIcon from '@/components/FlagIcon';
 import MissingRow from '@/components/MissingRow';
 import ProgressBar from '@/components/ProgressBar';
 import ShareImageButton from '@/components/ShareImageButton';
 import ShareListButton from '@/components/ShareListButton';
+import TeamFlag from '@/components/TeamFlag';
+
+function ShareBar() {
+  const [includeCC, setIncludeCC] = useLocalStoragePref<boolean>(
+    'share.includeCC',
+    false,
+  );
+
+  return (
+    <section className="mb-3 rounded-xl border border-border bg-background p-3">
+      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        Compartir mi lista
+      </h2>
+      <div className="flex items-stretch gap-2">
+        <ShareListButton />
+        <ShareImageButton />
+      </div>
+      <label className="mt-3 inline-flex items-center gap-2 text-xs text-foreground">
+        <input
+          type="checkbox"
+          checked={includeCC}
+          onChange={(e) => setIncludeCC(e.target.checked)}
+          className="h-4 w-4 accent-primary"
+        />
+        Incluir Coca-Cola al compartir
+      </label>
+    </section>
+  );
+}
 
 function teamFlagSlot(teamName: string) {
-  const info = flagInfoForTeamName(teamName);
-  if (info.flagCode) {
-    return <FlagIcon code={info.flagCode} alt="" className="w-8 shadow-sm" />;
-  }
   return (
-    <span className="text-2xl leading-none" aria-hidden="true">
-      {info.emoji}
-    </span>
+    <TeamFlag
+      info={flagInfoForTeamName(teamName)}
+      alt=""
+      className="w-8 shadow-sm"
+    />
   );
 }
 
@@ -42,10 +68,7 @@ export default function MissingPage() {
       </header>
 
       <div className="mx-auto max-w-md px-4 pt-3">
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <ShareListButton />
-          <ShareImageButton />
-        </div>
+        <ShareBar />
         <div
           role="tablist"
           aria-label="Filtro de faltantes"

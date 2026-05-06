@@ -8,7 +8,7 @@ interface DuplicateRowProps {
 }
 
 export default function DuplicateRow({ entry }: DuplicateRowProps) {
-  const { sticker, count, extra } = entry;
+  const { sticker, count } = entry;
 
   return (
     <li className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2">
@@ -18,13 +18,8 @@ export default function DuplicateRow({ entry }: DuplicateRowProps) {
       <span className="min-w-0 flex-1 truncate text-sm text-foreground">
         {sticker.name}
       </span>
-      <span
-        className="shrink-0 rounded-full bg-warning px-2 py-0.5 text-xs font-bold tabular-nums text-warning-foreground"
-        aria-label={`${extra} repetidas`}
-      >
-        x{extra}
-      </span>
       <QuantityStepper
+        compact
         value={count}
         onChange={(next) => {
           void setOwnedCount(sticker.id, next);

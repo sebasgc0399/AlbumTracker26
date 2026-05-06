@@ -1,3 +1,5 @@
+import { Check, X, Copy, HelpCircle } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { CambiatonState } from './CambiatonResult';
 
 export interface HistoryEntry {
@@ -13,12 +15,13 @@ interface CambiatonHistoryProps {
   onUndo: (entry: HistoryEntry) => void;
 }
 
-const STATE_ICONS: Record<CambiatonState, string> = {
-  serves: '🟢',
-  have: '🔴',
-  duplicate: '🟡',
-  invalid: '⚪',
-};
+const STATE_ICONS: Record<CambiatonState, { Icon: LucideIcon; color: string }> =
+  {
+    serves: { Icon: Check, color: 'text-success' },
+    have: { Icon: X, color: 'text-destructive' },
+    duplicate: { Icon: Copy, color: 'text-warning' },
+    invalid: { Icon: HelpCircle, color: 'text-muted-foreground' },
+  };
 
 function formatRelativeTime(timestamp: number, now: number): string {
   const diffSec = Math.max(0, Math.floor((now - timestamp) / 1000));
@@ -50,12 +53,16 @@ export default function CambiatonHistory({
           key={`${entry.stickerId}-${entry.timestamp}-${idx}`}
           className="flex h-16 items-center gap-3 px-3"
         >
-          <span
-            className="text-xl leading-none"
-            aria-hidden="true"
-          >
-            {STATE_ICONS[entry.state]}
-          </span>
+          {(() => {
+            const { Icon, color } = STATE_ICONS[entry.state];
+            return (
+              <Icon
+                aria-hidden="true"
+                strokeWidth={2.5}
+                className={`h-5 w-5 shrink-0 ${color}`}
+              />
+            );
+          })()}
 
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline gap-2">

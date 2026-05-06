@@ -1,3 +1,5 @@
+import { TEAMS } from '@/data/teams';
+import { compressIdsToTokens } from './compressIds';
 import type { TradeLists } from './types';
 
 export interface FormatOptions {
@@ -6,30 +8,37 @@ export interface FormatOptions {
 
 const FOOTER = 'Panini Mundial 2026 — generado con AT26';
 
-function naturalSortIds(ids: string[]): string[] {
-  return ids.slice().sort((a, b) =>
-    a.localeCompare(b, undefined, { numeric: true }),
-  );
+const TEAMS_BY_CODE = new Map(TEAMS.map((t) => [t.code, t]));
+
+function teamDisplayName(code: string): string {
+  if (code === '') return 'Introducción';
+  if (code === 'FWC') return 'FIFA';
+  if (code === 'CC') return 'Coca-Cola';
+  return TEAMS_BY_CODE.get(code)?.name ?? code;
 }
 
-function formatGroup(ids: string[]): string {
-  const sorted = naturalSortIds(ids);
-  if (sorted.length >= 3) {
-    return `${sorted.join(', ')} (${sorted.length})`;
+function formatTeamLine(code: string, ids: string[]): string {
+  const body = compressIdsToTokens(code, ids).join(', ');
+  const name = teamDisplayName(code);
+  if (ids.length >= 3) {
+    return `${name}: ${body} (${ids.length})`;
   }
-  return sorted.join(', ');
+  return `${name}: ${body}`;
 }
 
 function buildSection(
-  emoji: string,
   label: string,
   byTeam: Map<string, string[]>,
   total: number,
 ): string | null {
   if (total === 0) return null;
-  const teams = Array.from(byTeam.keys()).sort((a, b) => a.localeCompare(b));
-  const groups = teams.map((t) => formatGroup(byTeam.get(t) ?? []));
-  return `${emoji} ${label} (${total}): ${groups.join(' | ')}`;
+  const teams = Array.from(byTeam.keys()).sort((a, b) =>
+    teamDisplayName(a).localeCompare(teamDisplayName(b)),
+  );
+  const lines = teams.map((code) =>
+    formatTeamLine(code, byTeam.get(code) ?? []),
+  );
+  return `*${label} (${total})*\n${lines.join('\n')}`;
 }
 
 export function formatTradeList(
@@ -65,8 +74,8 @@ export function formatTradeList(
     missTotal += 1;
   }
 
-  const cambio = buildSection('🟢', 'CAMBIO', dupByTeam, dupTotal);
-  const busco = buildSection('🔴', 'BUSCO', missByTeam, missTotal);
+  const cambio = buildSection('CAMBIO', dupByTeam, dupTotal);
+  const busco = buildSection('BUSCO', missByTeam, missTotal);
 
   if (!cambio && !busco) return '';
 
@@ -74,5 +83,5 @@ export function formatTradeList(
   if (cambio) sections.push(cambio);
   if (busco) sections.push(busco);
 
-  return `${sections.join('\n')}\n\n${FOOTER}`;
+  return `${sections.join('\n\n')}\n\n${FOOTER}`;
 }

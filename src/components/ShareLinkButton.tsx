@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link2 } from 'lucide-react';
 import { useTradeableLists } from '@/db/hooks';
 import { encodeTradeList } from '@/utils/encodeTradeList';
 
@@ -74,10 +75,10 @@ export default function ShareLinkButton() {
         type="button"
         onClick={handleClick}
         disabled={isLoading || isEmpty}
-        className="inline-flex shrink-0 items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-background px-3 py-2.5 text-sm font-semibold text-foreground shadow-sm transition-colors active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <span aria-hidden="true">🔗</span>
-        <span>{isLoading ? 'Cargando…' : 'Compartir link'}</span>
+        <Link2 aria-hidden="true" className="h-4 w-4" />
+        <span>{isLoading ? 'Cargando…' : 'Link'}</span>
       </button>
 
       {toast ? (
