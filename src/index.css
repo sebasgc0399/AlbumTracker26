@@ -13,7 +13,9 @@
   --color-border: oklch(0.92 0 0);
 
   --color-success: oklch(0.7 0.18 145);
+  --color-success-foreground: oklch(1 0 0);
   --color-warning: oklch(0.78 0.16 80);
+  --color-warning-foreground: oklch(0.2 0 0);
   --color-foil: oklch(0.85 0.14 90);
 
   --color-destructive: oklch(0.6 0.22 25);

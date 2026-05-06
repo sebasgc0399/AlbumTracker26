@@ -4,25 +4,40 @@ interface StickerChipProps {
   sticker: Sticker;
   entry: CollectionEntry | undefined;
   onTap: (sticker: Sticker) => void;
+  variant?: 'default' | 'missing-mode';
 }
 
-export default function StickerChip({ sticker, entry, onTap }: StickerChipProps) {
+export default function StickerChip({
+  sticker,
+  entry,
+  onTap,
+  variant = 'default',
+}: StickerChipProps) {
   const count = entry?.count ?? 0;
   const isOwned = count > 0;
   const isDuplicated = count > 1;
   const isFoil = sticker.type === 'badge';
   const isTeamPhoto = sticker.type === 'team_photo';
 
-  const stateClasses = isOwned
-    ? 'bg-primary text-primary-foreground'
-    : 'bg-muted text-muted-foreground';
+  // En "missing-mode", las láminas que NO faltan (ya las tengo) se atenúan
+  // para mantener el contexto del grid completo, pero foco visual en lo faltante.
+  const isDimmedByFilter = variant === 'missing-mode' && isOwned;
+
+  const stateClasses = isDimmedByFilter
+    ? 'bg-muted/40 text-muted-foreground/60'
+    : isOwned
+      ? 'bg-primary text-primary-foreground'
+      : 'bg-muted text-muted-foreground';
 
   // Foils get a thicker gold ring; team photos get a dashed border to differentiate.
-  const typeClasses = isFoil
-    ? 'ring-2 ring-foil ring-offset-1 ring-offset-background'
-    : isTeamPhoto
-      ? 'border-2 border-dashed border-muted-foreground/60'
-      : 'border border-border';
+  // En missing-mode atenuado forzamos un borde punteado para refuerzo visual.
+  const typeClasses = isDimmedByFilter
+    ? 'border border-dashed border-border opacity-50'
+    : isFoil
+      ? 'ring-2 ring-foil ring-offset-1 ring-offset-background'
+      : isTeamPhoto
+        ? 'border-2 border-dashed border-muted-foreground/60'
+        : 'border border-border';
 
   return (
     <button
@@ -37,7 +52,7 @@ export default function StickerChip({ sticker, entry, onTap }: StickerChipProps)
         <span className="text-lg font-bold tabular-nums">{sticker.position}</span>
       </div>
 
-      {isFoil && (
+      {isFoil && !isDimmedByFilter && (
         <span
           className="absolute left-1 top-1 text-[0.65rem] leading-none"
           aria-hidden="true"
@@ -47,7 +62,7 @@ export default function StickerChip({ sticker, entry, onTap }: StickerChipProps)
         </span>
       )}
 
-      {isTeamPhoto && (
+      {isTeamPhoto && !isDimmedByFilter && (
         <span
           className="absolute left-1 top-1 text-[0.65rem] leading-none"
           aria-hidden="true"
@@ -57,7 +72,7 @@ export default function StickerChip({ sticker, entry, onTap }: StickerChipProps)
         </span>
       )}
 
-      {isDuplicated && (
+      {isDuplicated && !isDimmedByFilter && (
         <span
           className="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-warning px-1 text-[0.65rem] font-bold text-foreground shadow"
           aria-label={`${count - 1} repetidas`}

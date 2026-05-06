@@ -10,6 +10,7 @@ const TABS: readonly NavTab[] = [
   { to: '/', label: 'Inicio', icon: '🏠' },
   { to: '/search', label: 'Buscar', icon: '🔍' },
   { to: '/duplicates', label: 'Repetidas', icon: '🔄' },
+  { to: '/missing', label: 'Me Falta', icon: '🎯' },
 ];
 
 export default function BottomNav() {

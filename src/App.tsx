@@ -4,6 +4,7 @@ import GroupPage from '@/pages/GroupPage';
 import TeamPage from '@/pages/TeamPage';
 import SearchPage from '@/pages/SearchPage';
 import DuplicatesPage from '@/pages/DuplicatesPage';
+import MissingPage from '@/pages/MissingPage';
 import BottomNav from '@/components/BottomNav';
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/team/:teamCode" element={<TeamPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/duplicates" element={<DuplicatesPage />} />
+        <Route path="/missing" element={<MissingPage />} />
       </Routes>
       <BottomNav />
     </BrowserRouter>

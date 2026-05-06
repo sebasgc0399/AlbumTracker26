@@ -1,149 +1,154 @@
 import { useMemo } from 'react';
 import { TEAMS } from '@/data/teams';
-import { useCollection, useStickers } from '@/db/hooks';
-import type { Sticker } from '@/db/database';
+import DuplicateRow from '@/components/DuplicateRow';
+import TeamGroupHeader from '@/components/TeamGroupHeader';
+import { useDuplicatesByTeam, type DuplicateEntry } from '@/db/hooks';
+import { useLocalStoragePref } from '@/hooks/useLocalStoragePref';
 
-interface DuplicateItem {
-  sticker: Sticker;
-  extra: number;
-}
+type OrderMode = 'by-team' | 'most-duplicates';
 
-interface DuplicateGroup {
-  teamCode: string;
-  teamName: string;
-  flag: string;
-  totalDuplicates: number;
-  stickers: DuplicateItem[];
-}
+const FLAG_BY_TEAM_NAME = new Map(TEAMS.map((team) => [team.name, team.flag]));
 
-const FLAG_BY_TEAM = new Map(TEAMS.map((team) => [team.code, team.flag]));
-
-// Order: TEAMS array order (mirrors Mundial groups A→L), then specials at the end.
-// This matches HomePage's mental map (group A first, then B...) so the user
-// scans repetidas in the same order they explore the album.
-const TEAM_ORDER = new Map<string, number>(
-  TEAMS.map((team, idx) => [team.code, idx]),
-);
-const SPECIAL_ORDER: Record<string, number> = {
-  FWC: 1000,
-  CC: 1001,
-};
-
-function teamOrder(code: string): number {
-  return TEAM_ORDER.get(code) ?? SPECIAL_ORDER[code] ?? 9999;
-}
-
-function flagFor(teamCode: string): string {
-  if (FLAG_BY_TEAM.has(teamCode)) return FLAG_BY_TEAM.get(teamCode) ?? '';
-  if (teamCode === 'CC') return '🥤';
-  if (teamCode === 'FWC') return '🏆';
+function flagForTeamName(teamName: string): string {
+  const flag = FLAG_BY_TEAM_NAME.get(teamName);
+  if (flag) return flag;
+  if (teamName === 'Coca-Cola') return '🥤';
+  if (teamName === 'Introducción' || teamName === 'Museo FIFA') return '🏆';
   return '⚽';
 }
 
+function sumExtra(entries: DuplicateEntry[]): number {
+  let total = 0;
+  for (const e of entries) total += e.extra;
+  return total;
+}
+
 export default function DuplicatesPage() {
-  const stickers = useStickers();
-  const collection = useCollection();
+  const [order, setOrder] = useLocalStoragePref<OrderMode>(
+    'duplicates.order',
+    'by-team',
+  );
+  const [hideCC, setHideCC] = useLocalStoragePref<boolean>(
+    'duplicates.hideCC',
+    false,
+  );
 
-  const groups = useMemo<DuplicateGroup[] | undefined>(() => {
-    if (!stickers || !collection) return undefined;
+  const groups = useDuplicatesByTeam({ hideCC });
 
-    const buckets = new Map<string, DuplicateGroup>();
-
-    for (const sticker of stickers) {
-      const entry = collection.get(sticker.id);
-      if (!entry || entry.count <= 1) continue;
-      const extra = entry.count - 1;
-
-      let bucket = buckets.get(sticker.team);
-      if (!bucket) {
-        bucket = {
-          teamCode: sticker.team,
-          teamName: sticker.teamName,
-          flag: flagFor(sticker.team),
-          totalDuplicates: 0,
-          stickers: [],
-        };
-        buckets.set(sticker.team, bucket);
+  const orderedGroups = useMemo<[string, DuplicateEntry[]][] | undefined>(() => {
+    if (!groups) return undefined;
+    const arr = Array.from(groups.entries());
+    if (order === 'most-duplicates') {
+      for (const [, entries] of arr) {
+        entries.sort((a, b) => b.extra - a.extra);
       }
-      bucket.totalDuplicates += extra;
-      bucket.stickers.push({ sticker, extra });
+      arr.sort(([, a], [, b]) => sumExtra(b) - sumExtra(a));
     }
+    return arr;
+  }, [groups, order]);
 
-    for (const bucket of buckets.values()) {
-      bucket.stickers.sort(
-        (a, b) => a.sticker.position - b.sticker.position,
-      );
-    }
+  const totalGlobal = useMemo(() => {
+    if (!orderedGroups) return 0;
+    let total = 0;
+    for (const [, entries] of orderedGroups) total += sumExtra(entries);
+    return total;
+  }, [orderedGroups]);
 
-    return Array.from(buckets.values()).sort(
-      (a, b) => teamOrder(a.teamCode) - teamOrder(b.teamCode),
-    );
-  }, [stickers, collection]);
-
-  const isLoading = groups === undefined;
-  const isEmpty = !isLoading && groups.length === 0;
+  const isLoading = orderedGroups === undefined;
+  const isEmpty = !isLoading && orderedGroups.length === 0;
 
   return (
     <div className="min-h-screen bg-background pb-20 text-foreground">
       <header className="sticky top-0 z-10 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto max-w-md">
           <h1 className="text-xl font-bold text-foreground">Repetidas</h1>
-          <p className="text-xs text-muted-foreground">
-            Láminas con más de una copia
+          <p className="text-xs tabular-nums text-muted-foreground">
+            <span className="font-semibold text-foreground">{totalGlobal}</span>{' '}
+            láminas para cambiar
           </p>
         </div>
       </header>
 
       <main className="mx-auto max-w-md px-4 py-4">
+        <section className="mb-4 flex flex-wrap items-center gap-2">
+          <div
+            role="radiogroup"
+            aria-label="Orden"
+            className="inline-flex rounded-full border border-border bg-background p-0.5 text-xs"
+          >
+            <button
+              type="button"
+              role="radio"
+              aria-checked={order === 'by-team'}
+              onClick={() => setOrder('by-team')}
+              className={`rounded-full px-3 py-1 transition-colors ${
+                order === 'by-team'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground'
+              }`}
+            >
+              Por equipo
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={order === 'most-duplicates'}
+              onClick={() => setOrder('most-duplicates')}
+              className={`rounded-full px-3 py-1 transition-colors ${
+                order === 'most-duplicates'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground'
+              }`}
+            >
+              Más repetidas
+            </button>
+          </div>
+
+          <label className="ml-auto inline-flex items-center gap-2 text-xs text-foreground">
+            <input
+              type="checkbox"
+              checked={hideCC}
+              onChange={(e) => setHideCC(e.target.checked)}
+              className="h-4 w-4 accent-primary"
+            />
+            Ocultar Coca-Cola
+          </label>
+        </section>
+
         {isLoading ? (
           <ListSkeleton />
         ) : isEmpty ? (
           <div className="rounded-xl border border-dashed border-border bg-background p-6 text-center">
             <p className="text-sm text-muted-foreground">
-              No tenés repetidas todavía. Cuando registres láminas con
-              count &gt; 1, aparecerán acá.
+              No tenés repetidas todavía.
             </p>
           </div>
         ) : (
           <ul className="flex flex-col gap-4">
-            {groups.map((group) => (
-              <li
-                key={group.teamCode}
-                className="rounded-xl border border-border bg-background p-3"
-              >
-                <div className="mb-2 flex items-center gap-2">
-                  <span className="text-2xl leading-none">{group.flag}</span>
-                  <h2 className="flex-1 truncate text-base font-semibold text-foreground">
-                    {group.teamName}
-                  </h2>
-                  <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                    {group.totalDuplicates} repetida
-                    {group.totalDuplicates === 1 ? '' : 's'}
-                  </span>
-                </div>
-                <ul className="flex flex-col gap-1">
-                  {group.stickers.map(({ sticker, extra }) => (
-                    <li
-                      key={sticker.id}
-                      className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2"
-                    >
-                      <span className="shrink-0 rounded bg-background px-2 py-0.5 text-xs font-bold tabular-nums text-foreground">
-                        {sticker.id}
-                      </span>
-                      <span className="min-w-0 flex-1 truncate text-sm text-foreground">
-                        {sticker.name}
-                      </span>
-                      <span
-                        className="shrink-0 rounded-full bg-warning px-2 py-0.5 text-xs font-bold tabular-nums text-foreground"
-                        aria-label={`${extra} repetidas`}
-                      >
-                        +{extra}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
+            {orderedGroups.map(([teamName, entries]) => {
+              const teamTotal = sumExtra(entries);
+              return (
+                <li
+                  key={teamName}
+                  className="rounded-xl border border-border bg-background p-3"
+                >
+                  <div className="mb-2">
+                    <TeamGroupHeader
+                      flag={flagForTeamName(teamName)}
+                      name={teamName}
+                      countLabel={`${teamTotal} repetida${
+                        teamTotal === 1 ? '' : 's'
+                      }`}
+                    />
+                  </div>
+                  <ul className="flex flex-col gap-1">
+                    {entries.map((entry) => (
+                      <DuplicateRow key={entry.sticker.id} entry={entry} />
+                    ))}
+                  </ul>
+                </li>
+              );
+            })}
           </ul>
         )}
       </main>
