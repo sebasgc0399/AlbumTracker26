@@ -4,6 +4,7 @@ import { useLocalStoragePref } from '@/hooks/useLocalStoragePref';
 import { ALMOST_COMPLETE_THRESHOLD } from '@/utils/constants';
 import MissingRow from '@/components/MissingRow';
 import ProgressBar from '@/components/ProgressBar';
+import ShareListButton from '@/components/ShareListButton';
 
 const FLAG_BY_TEAM_NAME = new Map(TEAMS.map((team) => [team.name, team.flag]));
 
@@ -39,6 +40,9 @@ export default function MissingPage() {
       </header>
 
       <div className="mx-auto max-w-md px-4 pt-3">
+        <div className="mb-3">
+          <ShareListButton />
+        </div>
         <div
           role="tablist"
           aria-label="Filtro de faltantes"

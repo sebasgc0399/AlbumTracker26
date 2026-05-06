@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { TEAMS } from '@/data/teams';
 import DuplicateRow from '@/components/DuplicateRow';
+import ShareListButton from '@/components/ShareListButton';
 import TeamGroupHeader from '@/components/TeamGroupHeader';
 import { useDuplicatesByTeam, type DuplicateEntry } from '@/db/hooks';
 import { useLocalStoragePref } from '@/hooks/useLocalStoragePref';
@@ -70,6 +71,10 @@ export default function DuplicatesPage() {
       </header>
 
       <main className="mx-auto max-w-md px-4 py-4">
+        <section className="mb-4">
+          <ShareListButton />
+        </section>
+
         <section className="mb-4 flex flex-wrap items-center gap-2">
           <div
             role="radiogroup"

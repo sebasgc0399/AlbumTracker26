@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type CollectionEntry, type Sticker } from './database';
 import { ALMOST_COMPLETE_THRESHOLD } from '@/utils/constants';
+import type { TradeEntry, TradeLists } from '@/utils/types';
 
 export function useStickers(team?: string): Sticker[] | undefined {
   return useLiveQuery(
@@ -134,4 +135,45 @@ export function useMissingByTeam(opts: {
   }
 
   return result;
+}
+
+function readNickname(): string | undefined {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const raw = window.localStorage.getItem('at26.pref.nickname');
+    if (raw === null) return undefined;
+    try {
+      const parsed = JSON.parse(raw);
+      if (typeof parsed === 'string' && parsed.length > 0) return parsed;
+    } catch {
+      // Stored as plain string; fall through.
+    }
+    return raw.length > 0 ? raw : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function useTradeableLists(): TradeLists | undefined {
+  const duplicatesByTeam = useDuplicatesByTeam({ hideCC: false });
+  const missingByTeam = useMissingByTeam({ almostOnly: false });
+
+  if (!duplicatesByTeam || !missingByTeam) return undefined;
+
+  const duplicates: TradeEntry[] = [];
+  for (const entries of duplicatesByTeam.values()) {
+    for (const entry of entries) {
+      duplicates.push({ sticker: entry.sticker, extra: entry.extra });
+    }
+  }
+
+  const missing: Sticker[] = [];
+  for (const data of missingByTeam.values()) {
+    for (const entry of data.entries) {
+      missing.push(entry.sticker);
+    }
+  }
+
+  const nickname = readNickname();
+  return nickname ? { duplicates, missing, nickname } : { duplicates, missing };
 }
