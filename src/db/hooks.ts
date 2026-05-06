@@ -22,7 +22,7 @@ export function useCollection(): Map<string, CollectionEntry> | undefined {
 
 export interface ProgressSummary {
   owned: number;
-  total: 992;
+  total: 994;
   duplicates: number;
 }
 
@@ -41,7 +41,7 @@ export function useProgress(): ProgressSummary | undefined {
       }
     }
 
-    return { owned, total: 992, duplicates };
+    return { owned, total: 994, duplicates };
   });
 }
 

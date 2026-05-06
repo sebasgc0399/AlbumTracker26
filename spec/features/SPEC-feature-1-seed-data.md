@@ -1,26 +1,26 @@
-# SPEC F1 — Seed Data: JSON de las 992 láminas
+# SPEC F1 — Seed Data: JSON de las 994 láminas
 
 > Dependencias: ninguna (pero requiere setup base de Vite + TS antes)
 > Bloquea: F2 (la DB necesita el JSON para seedear), F4-F6 (queries dependen de los datos)
 
 ## Qué
 
-Archivo JSON estático con la metadata de las 992 láminas del álbum, organizado por sección y equipo. Se incluye en el bundle de Vite y se carga en IndexedDB la primera vez que se abre la app.
+Archivo JSON estático con la metadata de las 994 láminas del álbum, organizado por sección y equipo. Se incluye en el bundle de Vite y se carga en IndexedDB la primera vez que se abre la app.
 
-## Composición del álbum (992 láminas)
+## Composición del álbum (994 láminas)
 
 | Sección       | Cantidad | IDs                           |
 | ------------- | -------- | ----------------------------- |
 | Introducción  | 9        | `FWC1`–`FWC9`                 |
 | FIFA Museum   | 11       | `FWC10`–`FWC20`               |
 | Equipos × 48  | 960      | `{COUNTRY}{1-20}` (ej. `COL7`) |
-| Coca-Cola     | 12       | `CC1`–`CC12`                  |
+| Coca-Cola     | 14       | `CC1`–`CC14`                  |
 
 Cada equipo: 1 escudo (`badge`, foil) + 1 foto equipo (`team_photo`) + 18 jugadores (`player`).
 
 ## Criterio de done
 
-- [ ] `src/data/stickers.json` existe con exactamente 992 entries
+- [ ] `src/data/stickers.json` existe con exactamente 994 entries
 - [ ] Cada entry tiene: `id`, `number`, `name`, `team`, `teamName`, `group`, `section`, `type`, `position`
 - [ ] Equipos organizados por grupo del Mundial (A–L, 4 equipos por grupo)
 - [ ] Jugadores con nombre placeholder (`"Jugador 1"`...`"Jugador 18"`) — se actualizan en v1.1

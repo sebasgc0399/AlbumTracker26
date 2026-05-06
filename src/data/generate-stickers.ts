@@ -141,14 +141,34 @@ function buildTeams(): Sticker[] {
   return result;
 }
 
+// 14 láminas Coca-Cola con jugadores reales, en el orden impreso del álbum
+// Panini Mundial 2026 (edición Colombia). Confirmado contra fotos del álbum
+// físico — slot CC1..CC14 visibles junto al nombre del jugador.
+const COCACOLA_NAMES: readonly string[] = [
+  "Lamine Yamal",
+  "Joshua Kimmich",
+  "Harry Kane",
+  "Santiago Giménez",
+  "Joško Gvardiol",
+  "Federico Valverde",
+  "Jefferson Lerma",
+  "Enner Valencia",
+  "Gabriel Magalhães",
+  "Virgil van Dijk",
+  "Alphonso Davies",
+  "Emiliano Martínez",
+  "Raúl Jiménez",
+  "Lautaro Martínez",
+];
+
 function buildCocaCola(): Sticker[] {
-  return Array.from({ length: 12 }, (_, idx) => {
+  return COCACOLA_NAMES.map((name, idx) => {
     const position = idx + 1;
     const id = `CC${position}`;
     return {
       id,
       number: id,
-      name: `Coca-Cola Especial ${position}`,
+      name,
       team: "CC",
       teamName: "Coca-Cola",
       group: "special",
@@ -171,8 +191,8 @@ console.log(`Equipos:  ${teams.length}`);
 console.log(`CocaCola: ${cocacola.length}`);
 console.log(`Total:    ${all.length}`);
 
-if (all.length !== 992) {
-  throw new Error(`Total esperado 992, obtenido ${all.length}`);
+if (all.length !== 994) {
+  throw new Error(`Total esperado 994, obtenido ${all.length}`);
 }
 
 const here = dirname(fileURLToPath(import.meta.url));

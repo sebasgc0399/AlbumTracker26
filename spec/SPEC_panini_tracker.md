@@ -1,6 +1,6 @@
 # SPEC — AlbumTracker26 · Fase 0+1: Setup + MVP
 
-> Alcance: App instalable en celular que permite marcar las 992 láminas del álbum Panini Mundial 2026 como tenidas, contar repetidas, y ver progreso por equipo y total.
+> Alcance: App instalable en celular que permite marcar las 994 láminas del álbum Panini Mundial 2026 como tenidas, contar repetidas, y ver progreso por equipo y total.
 > Dependencias: Ninguna
 > Estimado: 1 fin de semana (solo dev)
 > Stack relevante: React 19 + TypeScript + Vite + Tailwind CSS v4 + Dexie.js + vite-plugin-pwa + Firebase Hosting
@@ -15,11 +15,11 @@ Al terminar esta fase, el usuario puede abrir la app en su celular (instalada co
 
 ## Features
 
-### F1: Seed Data — JSON de las 992 láminas
+### F1: Seed Data — JSON de las 994 láminas
 
-**Qué:** Archivo JSON estático con la metadata de las 992 láminas del álbum (980 set base FIFA + 12 promo Coca-Cola), organizado por sección y equipo. Este archivo se genera una vez y se incluye en el bundle de la app. Al abrir la app por primera vez, las láminas se cargan en IndexedDB vía Dexie.
+**Qué:** Archivo JSON estático con la metadata de las 994 láminas del álbum (980 set base FIFA + 14 promo Coca-Cola), organizado por sección y equipo. Este archivo se genera una vez y se incluye en el bundle de la app. Al abrir la app por primera vez, las láminas se cargan en IndexedDB vía Dexie.
 
-**Estructura del álbum (992 láminas):**
+**Estructura del álbum (994 láminas):**
 - **Introducción:** 9 láminas (logo FIFA, trofeo, mascota, logo del torneo, sedes, etc.) — IDs: FWC1–FWC9
 - **FIFA Museum (Historia):** 11 láminas de campeones históricos — IDs: FWC10–FWC20
 - **48 Equipos × 20 láminas cada uno = 960 láminas:**
@@ -27,10 +27,10 @@ Al terminar esta fase, el usuario puede abrir la app en su celular (instalada co
   - 1 foto de equipo (tipo: `team_photo`)
   - 18 jugadores (tipo: `player`)
   - IDs: `{COUNTRY_CODE}{1-20}` (ej: `USA1`, `COL1`, `ARG1`)
-- **Coca-Cola:** 12 láminas promocionales con espacio físico dedicado en el álbum (sí cuentan en el total de 992, aunque no son parte del set base FIFA de 980) — IDs: `CC1`–`CC12`
+- **Coca-Cola:** 14 láminas promocionales con espacio físico dedicado en el álbum (sí cuentan en el total de 994, aunque no son parte del set base FIFA de 980) — IDs: `CC1`–`CC14`
 
 **Criterio de done:**
-- [ ] Existe `src/data/stickers.json` con las 980 láminas base + 12 de Coca-Cola
+- [ ] Existe `src/data/stickers.json` con las 980 láminas base + 14 de Coca-Cola
 - [ ] Cada lámina tiene: `id` (string único), `number` (display), `name` (nombre del jugador o descripción), `team` (código país o `"FWC"`/`"CC"`), `teamName` (nombre completo), `group` (grupo del mundial o `"special"`), `section` (intro/museum/team/cocacola), `type` (badge/team_photo/player/special), `position` (número ordinal dentro de su equipo)
 - [ ] Los equipos están organizados por grupo del Mundial (A–L, 4 equipos por grupo)
 - [ ] El JSON es importado y usado como seed al inicializar la DB
@@ -56,7 +56,7 @@ Los escudos, fotos de equipo, láminas de introducción, museo y Coca-Cola SÍ t
 
 **Criterio de done:**
 - [ ] La DB se crea automáticamente al abrir la app por primera vez
-- [ ] La tabla `stickers` contiene las 992 láminas (980 base + 12 CC) con toda su metadata
+- [ ] La tabla `stickers` contiene las 994 láminas (980 base + 14 CC) con toda su metadata
 - [ ] La tabla `collection` se inicializa vacía (el usuario la llena con taps)
 - [ ] Si la DB ya existe (segunda visita), no se re-seedea
 - [ ] `useLiveQuery` de Dexie funciona para queries reactivos en componentes React
@@ -155,10 +155,10 @@ VitePWA({
 
 ### F4: Pantalla Home — Progreso General + Navegación por Grupo
 
-**Qué:** Pantalla principal que muestra el progreso total del álbum (X/992 láminas) con barra de progreso visual, y una lista de los 12 grupos del mundial (A–L) + secciones especiales como entry points para navegar a los equipos.
+**Qué:** Pantalla principal que muestra el progreso total del álbum (X/994 láminas) con barra de progreso visual, y una lista de los 12 grupos del mundial (A–L) + secciones especiales como entry points para navegar a los equipos.
 
 **Criterio de done:**
-- [ ] Se muestra el contador "X de 992" con barra de progreso (porcentaje)
+- [ ] Se muestra el contador "X de 994" con barra de progreso (porcentaje)
 - [ ] Se muestra la cantidad de láminas repetidas totales
 - [ ] Se listan los 12 grupos (A–L) con los nombres de los 4 equipos de cada grupo
 - [ ] Cada grupo muestra un mini progreso (ej: "32/80" — 4 equipos × 20)
@@ -269,7 +269,7 @@ La vista de Repetidas sirve como base para la Fase 2 (compartir lista de cambios
 ```
 src/
 ├── data/
-│   ├── stickers.json          # Seed data: 992 láminas con metadata
+│   ├── stickers.json          # Seed data: 994 láminas con metadata
 │   ├── teams.ts               # Constantes: 48 equipos + grupos + banderas
 │   └── generate-stickers.ts   # Script Node para generar stickers.json
 ├── db/
@@ -327,12 +327,12 @@ vite.config.ts                   # Vite + PWA plugin config
 Al terminar esta fase, TODAS estas condiciones deben ser verdaderas:
 
 - [ ] La app compila sin errores ni warnings de TypeScript
-- [ ] `stickers.json` contiene exactamente 992 entries (980 base + 12 CC)
+- [ ] `stickers.json` contiene exactamente 994 entries (980 base + 14 CC)
 - [ ] Al abrir la app por primera vez, las láminas se cargan en IndexedDB
 - [ ] El usuario puede navegar Home → Grupo → Equipo → ver láminas
 - [ ] El usuario puede marcar una lámina como tenida con un tap
 - [ ] El usuario puede registrar repetidas con el stepper +/-
-- [ ] El progreso general (X/992) se actualiza en tiempo real
+- [ ] El progreso general (X/994) se actualiza en tiempo real
 - [ ] El progreso por equipo (X/20) se actualiza en tiempo real
 - [ ] La búsqueda rápida encuentra láminas por número (ej: "COL7")
 - [ ] La vista de repetidas muestra todas las láminas con count>1

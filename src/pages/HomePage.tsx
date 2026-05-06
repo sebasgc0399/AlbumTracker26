@@ -20,7 +20,7 @@ interface SpecialSection {
 const SPECIAL_SECTIONS: readonly SpecialSection[] = [
   { id: 'intro', name: 'Introducción', count: 9, description: '9 láminas' },
   { id: 'museum', name: 'Museo FIFA', count: 11, description: '11 láminas' },
-  { id: 'cocacola', name: 'Coca-Cola', count: 12, description: '12 láminas (promo)' },
+  { id: 'cocacola', name: 'Coca-Cola', count: 14, description: '14 láminas (promo)' },
 ];
 
 export default function HomePage() {

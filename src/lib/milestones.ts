@@ -42,7 +42,7 @@ const GLOBAL_PHRASES: Record<number, string> = {
   980: 'Novecientas ochenta. Casi entero.',
 };
 
-const ALBUM_TOTAL = 992;
+const ALBUM_TOTAL = 994;
 const TEAM_TOTAL = 20;
 const GROUP_TOTAL = 80;
 

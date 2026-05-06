@@ -1,6 +1,6 @@
 # AlbumTracker26
 
-PWA personal para trackear el álbum Panini Mundial 2026. El usuario marca cada una de las 992 láminas como "la tengo" con un tap, registra repetidas y ve progreso por equipo y total — todo 100% offline en el celular.
+PWA personal para trackear el álbum Panini Mundial 2026. El usuario marca cada una de las 994 láminas como "la tengo" con un tap, registra repetidas y ve progreso por equipo y total — todo 100% offline en el celular.
 
 **Estado actual:** Fase 0+1 (Setup + MVP). Solo existe el SPEC en [spec/SPEC_panini_tracker.md](spec/SPEC_panini_tracker.md); el código aún no está iniciado. Cualquier comando, archivo o convención de abajo refleja la decisión del SPEC, no código existente.
 
@@ -34,7 +34,7 @@ firebase deploy      # Deploy a Firebase Hosting (tras npm run build)
 ```
 src/
 ├── data/
-│   ├── stickers.json          # Seed: 992 láminas con metadata
+│   ├── stickers.json          # Seed: 994 láminas con metadata
 │   ├── teams.ts               # 48 equipos + grupos + banderas emoji
 │   └── generate-stickers.ts   # Script Node que genera stickers.json
 ├── db/
@@ -58,7 +58,7 @@ Dos tablas Dexie. La separación es deliberada: permite re-seedear el catálogo 
 
 | Tabla        | Contenido                          | Mutabilidad                |
 | ------------ | ---------------------------------- | -------------------------- |
-| `stickers`   | Catálogo de las 992 láminas        | Inmutable (re-seed-only)   |
+| `stickers`   | Catálogo de las 994 láminas        | Inmutable (re-seed-only)   |
 | `collection` | Estado del usuario (owned, count)  | Mutable en cada tap        |
 
 ```typescript
@@ -81,12 +81,12 @@ interface CollectionEntry {
 }
 ```
 
-### Composición de las 992 láminas
+### Composición de las 994 láminas
 
 - **9** intro (`FWC1`–`FWC9`)
 - **11** museo FIFA (`FWC10`–`FWC20`)
 - **960** equipos: 48 países × 20 láminas (1 escudo foil + 1 foto equipo + 18 jugadores), IDs `{COUNTRY_CODE}{1-20}` (ej. `ARG1`, `COL7`)
-- **12** Coca-Cola promo (`CC1`–`CC12`)
+- **14** Coca-Cola promo (`CC1`–`CC14`) — confirmado contra el álbum físico edición Colombia
 
 El usuario identifica láminas por **número/ID**, no por nombre del jugador (igual que en el álbum físico). Esto justifica que los nombres "Jugador 1..18" sean aceptables en el MVP.
 

@@ -62,3 +62,22 @@ db.version(3)
     await stickersTable.clear();
     await stickersTable.bulkAdd(stickersData as Sticker[]);
   });
+
+// Versión 4: catálogo Coca-Cola corregido a 14 láminas (era 12)
+//   - El álbum físico tiene CC1..CC14, no CC1..CC12 como decía la SPEC inicial.
+//   - Los nombres CC1..CC14 ahora son los jugadores reales (eran "Coca-Cola Especial N").
+//   - Total real del álbum: 994, no 992.
+//
+// Misma estrategia que v3: re-seedear `stickers` desde el JSON nuevo. La tabla
+// `collection` queda intacta — los IDs de las CC existentes (CC1..CC12) no
+// cambian y los dos nuevos (CC13, CC14) simplemente aparecen como "no tengo".
+db.version(4)
+  .stores({
+    stickers: 'id, team, group, section, type',
+    collection: 'stickerId',
+  })
+  .upgrade(async (tx) => {
+    const stickersTable = tx.table<Sticker>('stickers');
+    await stickersTable.clear();
+    await stickersTable.bulkAdd(stickersData as Sticker[]);
+  });

@@ -153,7 +153,7 @@ function MilestoneCard({ milestone, flagCode, isAlbum }: MilestoneCardProps) {
           aria-hidden="true"
           className="font-mono text-4xl font-extrabold text-foil"
         >
-          992 / 992
+          994 / 994
         </span>
       )}
       <p className={phraseClass}>{milestone.phrase}</p>

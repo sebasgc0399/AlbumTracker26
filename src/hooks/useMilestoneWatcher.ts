@@ -127,7 +127,7 @@ export function MilestoneProvider({ children }: MilestoneProviderProps) {
     perGroupRef.current = snapshot.perGroup;
 
     const nextReached = computeReachedSet(
-      { owned: snapshot.ownedTotal, total: 992 },
+      { owned: snapshot.ownedTotal, total: 994 },
       snapshot.perTeam,
       snapshot.perGroup,
     );

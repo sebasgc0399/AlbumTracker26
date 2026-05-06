@@ -34,7 +34,7 @@ ampliar el alcance:
 - [x] `src/data/generate-stickers.ts` mapea posición → tipo según estructura real:
       pos 1 = badge, pos 13 = team_photo, pos 2-12 y 14-20 = player
 - [x] El generador valida que cada equipo en `PLAYERS` tenga 18 strings no vacías
-- [x] `src/data/stickers.json` regenerado: 992 entries, 0 ocurrencias de "Jugador "
+- [x] `src/data/stickers.json` regenerado: 992 entries (luego ampliado a 994 al confirmar 14 CC), 0 ocurrencias de "Jugador "
 - [x] `src/db/database.ts` define versión 3 con upgrade callback que limpia y
       re-seedea la tabla `stickers` desde el JSON nuevo. La tabla `collection`
       (owned/count) NO se toca — el progreso del usuario se preserva

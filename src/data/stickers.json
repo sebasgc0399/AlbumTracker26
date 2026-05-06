@@ -10782,7 +10782,7 @@
   {
     "id": "CC1",
     "number": "CC1",
-    "name": "Coca-Cola Especial 1",
+    "name": "Lamine Yamal",
     "team": "CC",
     "teamName": "Coca-Cola",
     "group": "special",
@@ -10793,7 +10793,7 @@
   {
     "id": "CC2",
     "number": "CC2",
-    "name": "Coca-Cola Especial 2",
+    "name": "Joshua Kimmich",
     "team": "CC",
     "teamName": "Coca-Cola",
     "group": "special",
@@ -10804,7 +10804,7 @@
   {
     "id": "CC3",
     "number": "CC3",
-    "name": "Coca-Cola Especial 3",
+    "name": "Harry Kane",
     "team": "CC",
     "teamName": "Coca-Cola",
     "group": "special",
@@ -10815,7 +10815,7 @@
   {
     "id": "CC4",
     "number": "CC4",
-    "name": "Coca-Cola Especial 4",
+    "name": "Santiago Giménez",
     "team": "CC",
     "teamName": "Coca-Cola",
     "group": "special",
@@ -10826,7 +10826,7 @@
   {
     "id": "CC5",
     "number": "CC5",
-    "name": "Coca-Cola Especial 5",
+    "name": "Joško Gvardiol",
     "team": "CC",
     "teamName": "Coca-Cola",
     "group": "special",
@@ -10837,7 +10837,7 @@
   {
     "id": "CC6",
     "number": "CC6",
-    "name": "Coca-Cola Especial 6",
+    "name": "Federico Valverde",
     "team": "CC",
     "teamName": "Coca-Cola",
     "group": "special",
@@ -10848,7 +10848,7 @@
   {
     "id": "CC7",
     "number": "CC7",
-    "name": "Coca-Cola Especial 7",
+    "name": "Jefferson Lerma",
     "team": "CC",
     "teamName": "Coca-Cola",
     "group": "special",
@@ -10859,7 +10859,7 @@
   {
     "id": "CC8",
     "number": "CC8",
-    "name": "Coca-Cola Especial 8",
+    "name": "Enner Valencia",
     "team": "CC",
     "teamName": "Coca-Cola",
     "group": "special",
@@ -10870,7 +10870,7 @@
   {
     "id": "CC9",
     "number": "CC9",
-    "name": "Coca-Cola Especial 9",
+    "name": "Gabriel Magalhães",
     "team": "CC",
     "teamName": "Coca-Cola",
     "group": "special",
@@ -10881,7 +10881,7 @@
   {
     "id": "CC10",
     "number": "CC10",
-    "name": "Coca-Cola Especial 10",
+    "name": "Virgil van Dijk",
     "team": "CC",
     "teamName": "Coca-Cola",
     "group": "special",
@@ -10892,7 +10892,7 @@
   {
     "id": "CC11",
     "number": "CC11",
-    "name": "Coca-Cola Especial 11",
+    "name": "Alphonso Davies",
     "team": "CC",
     "teamName": "Coca-Cola",
     "group": "special",
@@ -10903,12 +10903,34 @@
   {
     "id": "CC12",
     "number": "CC12",
-    "name": "Coca-Cola Especial 12",
+    "name": "Emiliano Martínez",
     "team": "CC",
     "teamName": "Coca-Cola",
     "group": "special",
     "section": "cocacola",
     "type": "special",
     "position": 12
+  },
+  {
+    "id": "CC13",
+    "number": "CC13",
+    "name": "Raúl Jiménez",
+    "team": "CC",
+    "teamName": "Coca-Cola",
+    "group": "special",
+    "section": "cocacola",
+    "type": "special",
+    "position": 13
+  },
+  {
+    "id": "CC14",
+    "number": "CC14",
+    "name": "Lautaro Martínez",
+    "team": "CC",
+    "teamName": "Coca-Cola",
+    "group": "special",
+    "section": "cocacola",
+    "type": "special",
+    "position": 14
   }
 ]

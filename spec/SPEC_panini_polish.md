@@ -9,7 +9,7 @@
 
 ## Objetivo
 
-Después de F7, la app **funciona**: el usuario carga sus 992 láminas, busca por número, marca, ve progreso, navega offline. Pero todavía no **se siente bien**: cada tap es funcional pero plano, no hay feedback emocional al completar un equipo, registrar 7 láminas seguidas obliga a tap-tap-tap-tap sin protección contra error, y el modo claro deslumbra a la madrugada.
+Después de F7, la app **funciona**: el usuario carga sus 994 láminas, busca por número, marca, ve progreso, navega offline. Pero todavía no **se siente bien**: cada tap es funcional pero plano, no hay feedback emocional al completar un equipo, registrar 7 láminas seguidas obliga a tap-tap-tap-tap sin protección contra error, y el modo claro deslumbra a la madrugada.
 
 Esta fase ataca exactamente esa brecha. No introduce nuevas pantallas grandes — refina las que ya existen para que el flujo crítico (**búsqueda → tap → siguiente**) pase de "rápido" a "placentero", y el resto del producto adquiera identidad propia en vez de parecer un wireframe funcional.
 

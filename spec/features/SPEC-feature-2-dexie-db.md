@@ -10,7 +10,7 @@ Definir IndexedDB vía Dexie con dos tablas: `stickers` (catálogo inmutable) y 
 ## Criterio de done
 
 - [ ] La DB se crea automáticamente al abrir la app por primera vez
-- [ ] La tabla `stickers` contiene las 992 láminas con toda su metadata
+- [ ] La tabla `stickers` contiene las 994 láminas con toda su metadata
 - [ ] La tabla `collection` se inicializa vacía
 - [ ] Si la DB ya existe (segunda visita), no se re-seedea (`db.stickers.count() === 0` como guard)
 - [ ] `useLiveQuery` de `dexie-react-hooks` funciona para queries reactivos
@@ -65,4 +65,4 @@ db.version(1).stores({
 
 - `seedDatabase()` se llama desde `main.tsx` antes de `createRoot`, esperando la promesa.
 - Los hooks reactivos requieren import específico: `import { useLiveQuery } from 'dexie-react-hooks'`, no de `dexie`.
-- `useProgress()` debe devolver `{ owned: number; total: 992; duplicates: number }`. **El total es 992** — todas las láminas que tienen espacio físico en el álbum (incluye las 12 de Coca-Cola). `owned` suma entries con `count > 0` sin filtrar por sección. `duplicates` es `sum(count - 1)` para entries con `count > 1`.
+- `useProgress()` debe devolver `{ owned: number; total: 994; duplicates: number }`. **El total es 994** — todas las láminas que tienen espacio físico en el álbum (incluye las 14 de Coca-Cola). `owned` suma entries con `count > 0` sin filtrar por sección. `duplicates` es `sum(count - 1)` para entries con `count > 1`.
