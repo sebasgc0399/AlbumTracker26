@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
 import type { Sticker } from '@/db/database';
+import { feedback, type FeedbackKind } from '@/lib/feedback';
 
 export type CambiatonState = 'serves' | 'have' | 'duplicate' | 'invalid';
+
+const STATE_TO_FEEDBACK: Record<CambiatonState, FeedbackKind> = {
+  serves: 'newOwned',
+  have: 'tap',
+  duplicate: 'duplicate',
+  invalid: 'error',
+};
 
 interface CambiatonResultProps {
   state: CambiatonState;
@@ -46,13 +54,6 @@ const STATE_CONFIG: Record<CambiatonState, StateConfig> = {
   },
 };
 
-const VIBRATE_PATTERNS: Record<CambiatonState, number[] | null> = {
-  serves: [50],
-  have: [50, 80, 50],
-  duplicate: [200],
-  invalid: null,
-};
-
 export default function CambiatonResult({
   state,
   sticker,
@@ -71,9 +72,7 @@ export default function CambiatonResult({
   }, []);
 
   useEffect(() => {
-    if (!('vibrate' in navigator)) return;
-    const pattern = VIBRATE_PATTERNS[state];
-    if (pattern) navigator.vibrate(pattern);
+    feedback({ kind: STATE_TO_FEEDBACK[state] });
   }, [state]);
 
   const displayId = sticker?.id ?? inputId;

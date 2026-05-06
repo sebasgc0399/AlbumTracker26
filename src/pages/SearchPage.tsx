@@ -6,6 +6,7 @@ import BatchSummary from '@/components/BatchSummary';
 import type { Sticker } from '@/db/database';
 import { useCollection, useStickers } from '@/db/hooks';
 import { incrementAndReturn } from '@/db/mutations';
+import { feedback } from '@/lib/feedback';
 import { useBatchSession } from '@/hooks/useBatchSession';
 
 const MAX_VISIBLE = 8;
@@ -53,14 +54,12 @@ export default function SearchPage() {
   const visible = matches.slice(0, MAX_VISIBLE);
   const overflow = Math.max(0, matches.length - MAX_VISIBLE);
 
-  function vibrate() {
-    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      navigator.vibrate(10);
-    }
-  }
-
   async function handleTap(sticker: Sticker) {
-    vibrate();
+    // Approximate kind from cache for instant haptic; the truthful prev
+    // comes from the atomic transaction below for batch tracking.
+    const cachedPrev = collection?.get(sticker.id)?.count ?? 0;
+    feedback({ kind: cachedPrev === 0 ? 'newOwned' : 'duplicate' });
+
     setFlashId(sticker.id);
     setQuery('');
     inputRef.current?.focus();

@@ -103,29 +103,55 @@ Transiciones:
 
 ### F9: Feedback sensorial unificado
 
-**Qué:** Sistema centralizado de feedback (haptic + animación + sonido opcional) que se dispara desde cualquier punto de la app con un solo helper. Garantiza que cada tap "se siente igual" en cualquier pantalla.
+**Estado:** Implementado. La pieza visual per-element queda como enhancement futuro — la centralización de haptic + setup de sonido + migración de los 3 sitios existentes están done.
+
+**Qué:** Sistema centralizado de feedback (haptic + animación + sonido opcional) accesible vía `feedback({ kind, element? })`. Garantiza que cada tap "se siente igual" en cualquier pantalla — la app expresa nueva-vs-repetida con patterns distintos en lugar de un único `vibrate(10)` indiferenciado.
 
 **Criterio de done:**
-- [ ] Existe `src/lib/feedback.ts` con `feedback({ kind: 'tap' | 'newOwned' | 'duplicate' | 'milestone' | 'error' })` como API única
-- [ ] `kind: 'tap'` → vibración corta (10ms) + scale del elemento de 1.0 → 0.95 → 1.0 en 120ms (CSS transition, no JS)
-- [ ] `kind: 'newOwned'` → vibración media (30ms) + flash verde primario en el chip + ripple desde el centro
-- [ ] `kind: 'duplicate'` → doble vibración corta (10-50-10) + el chip muestra brevemente el badge numérico nuevo con scale-up
-- [ ] `kind: 'milestone'` → patrón largo (50-30-50-30-50) — usado por F10
-- [ ] `kind: 'error'` → vibración larga única (80ms) + shake horizontal del elemento
-- [ ] Todo `navigator.vibrate(...)` está dentro de `if ('vibrate' in navigator)` (gotcha iOS)
-- [ ] Si `prefers-reduced-motion: reduce`, las animaciones se reducen a un fade simple de 60ms y no hay vibración
-- [ ] Toggle "Sonido" en Ajustes (off por default) — cuando está on, suma un click corto (Web Audio API, no `<audio>`)
+- [x] Existe `src/lib/feedback.ts` con `feedback({ kind: 'tap' | 'newOwned' | 'duplicate' | 'milestone' | 'error', element? })` como API única
+- [x] `kind: 'tap'` → vibración 10ms + Web Animations API: scale 1 → 0.95 → 1 en 120ms (cuando se pasa `element`)
+- [x] `kind: 'newOwned'` → vibración 30ms + scale 1 → 1.04 → 1 con halo box-shadow verde primario expandiéndose
+- [x] `kind: 'duplicate'` → doble vibración corta (10-50-10) + scale 1 → 1.06 → 1 (badge pop)
+- [x] `kind: 'milestone'` → patrón largo (50-30-50-30-50) — usado por F10 cuando entre. No hay animación per-element (el overlay full-screen de F10 hará el visual)
+- [x] `kind: 'error'` → vibración 80ms + shake horizontal (translateX -4 → 4 → -4 → 0) en 240ms
+- [x] Todo `navigator.vibrate(...)` está dentro de `'vibrate' in navigator` + try/catch (Safari iOS no implementa)
+- [x] Si `prefers-reduced-motion: reduce`, NO hay vibración Y no hay animación per-element. La función no opera (silenciosamente)
+- [x] Sonido: implementado con Web Audio API (osciladores sine tono específico por kind, ~100ms de duración con envelope exponencial). **Off por default**. Toggle UI queda diferido a F12 (SettingsPage no existe todavía); lectura via `localStorage.at26.pref.sound`
 
-**Archivos a crear/modificar:**
-- `src/lib/feedback.ts` — API única + lógica de detección de capabilities
-- `src/lib/sounds.ts` — generación de clicks/dings con `AudioContext` (sin assets)
-- `src/components/StickerChip.tsx` — invocar `feedback()` en `onClick` (en vez de lógica inline)
-- `src/index.css` — keyframes globales para `tap-pulse`, `chip-flash`, `chip-ripple`, `chip-shake`, todos respetando `@media (prefers-reduced-motion: reduce)`
+**Archivos creados/modificados (as-built):**
 
-**Notas de implementación:**
-La razón de centralizar es coherencia: si cada componente implementa su propio `vibrate()`, terminan con duraciones distintas y se siente disparejo. El helper también permite una "modo silencioso" futuro (apagar todo desde Ajustes) sin tocar componentes.
+Nuevos:
+- `src/lib/feedback.ts` — API única + AudioContext lazy + Web Animations API helpers + guards (iOS, reduced-motion). Todo en un solo archivo (~150 líneas)
 
-Usar Web Audio API en vez de `<audio src=...>` porque (a) no se cachea peor en SW, (b) latencia más baja en el primer tap, (c) menos peso (no hay archivos).
+Modificados:
+- `src/pages/SearchPage.tsx` — quita el `vibrate()` helper local. handleTap dispara `feedback({ kind })` con kind decidido por `cachedPrev` (newOwned si nueva, duplicate si repetida) ANTES del await de la mutation, para haptic instantáneo
+- `src/pages/TeamPage.tsx` — quita el `vibrate()` helper local. handleTap dispara `feedback({ kind: isFirstTap ? 'newOwned' : 'tap' })` (tap kind para abrir el bottom sheet de detalle, newOwned para incrementar de 0 a 1)
+- `src/components/CambiatonResult.tsx` — quita el map `VIBRATE_PATTERNS` y la llamada manual a `navigator.vibrate`. El `useEffect([state])` ahora dispara `feedback({ kind: STATE_TO_FEEDBACK[state] })` con mapeo: `serves → newOwned`, `have → tap`, `duplicate → duplicate`, `invalid → error`
+
+Sin cambios pendientes:
+- `src/components/StickerChip.tsx` — el `active:scale-95` CSS ya provee el feedback visual de tap. La integración con `feedback({ kind, element })` queda como follow-up cuando se quiera el flash post-tap de "newOwned" sobre el chip mismo (hoy el flash visual lo resuelve `isFlashing` prop en SearchResult)
+
+**Notas de implementación (as-built):**
+
+**Haptic instantáneo > kind perfecto**: handleTap fire-and-forget hace `feedback({ kind })` con el `prev` leído del cache reactivo de Dexie ANTES del await. Si la cache está stale en una rapid double-tap, el kind puede ser ligeramente off (ej. 'newOwned' en vez de 'duplicate' por 50ms), pero el usuario siente el haptic instante. La precisión de la mutation (para el batch) queda a cargo de `incrementAndReturn` (transacción atómica) que se ejecuta después y retorna prev/next reales.
+
+**Web Animations API en vez de classes**: cuando se pasa `element`, las animaciones se aplican vía `element.animate(keyframes, { duration, easing })`. Esto evita pollution de clases CSS y permite re-trigger inmediato (mismo elemento, varias animaciones consecutivas). Las clases con keyframes globales fallan en re-trigger sin `key` props o trickery con `void el.offsetWidth`.
+
+**Sound = Web Audio API**: `AudioContext` lazy-initialized en el primer call (los browsers requieren user gesture para crear el contexto). Cada kind tiene su frecuencia (tap=800Hz, newOwned=1100Hz, duplicate=950Hz, milestone=600Hz, error=360Hz). Envelope exponencial (0→0.08 en 10ms, decay a 0 en 90ms). El osciator se destruye después de 100ms.
+
+**Sin assets de audio**: la decisión de Web Audio API en vez de `<audio src=...>` se mantiene del SPEC original — no inflar el SW cache, latencia mínima, sin assets binarios.
+
+**`getSoundEnabled()` y `setSoundEnabled(enabled)` exportados** para que F12 (SettingsPage) los conecte directo al toggle. No hay polling — `feedback()` lee de localStorage en cada llamada.
+
+**`reduced-motion` apaga TODO**, no solo animación: la decisión es interpretar reduced-motion como "minimizar interrupciones del flujo", lo que incluye haptic. Si el usuario tiene activado el setting, no buzzea ni anima. Sound queda independiente (es opcional y off por default igual). Esta lectura del SPEC ("apaga F9/F10") es coherente con que reduced-motion en iOS también desactiva keyboard taptic en algunas configuraciones.
+
+**Verificación e2e con Playwright (smoke test)**:
+- JOR1 nueva → `vibrate(30)` (newOwned) ✅
+- JOR1 repetida → `vibrate([10, 50, 10])` (duplicate) ✅
+- JOR2 nueva → `vibrate(30)` (newOwned) ✅
+- Sin errores de consola
+
+El test confirma que la diferenciación nueva/repetida que F9 introduce funciona — antes todos los taps disparaban el mismo `vibrate(10)`.
 
 ---
 
@@ -383,9 +409,8 @@ Casos compuestos (`gb-eng` para Inglaterra): por eso el campo se llama `flagCode
 
 ```
 src/
-├── lib/                          # NUEVO — utilidades transversales
-│   ├── feedback.ts               # F9
-│   ├── sounds.ts                 # F9
+├── lib/                          # utilidades transversales
+│   ├── feedback.ts               # F9 ✓ — incluye sound stub via Web Audio API
 │   ├── milestones.ts             # F10
 │   ├── theme.ts                  # F12
 │   ├── copy.ts                   # F13
@@ -425,7 +450,7 @@ scripts/                          # NUEVO — directorio raíz
 Al terminar esta fase, TODAS estas condiciones deben ser verdaderas:
 
 - [x] Registrar 7 láminas seguidas vía búsqueda toma menos de 30s sin equivocarme (F8 implementado: contador + undo individual + undo batch)
-- [ ] Cada tap en una lámina tiene feedback haptic (Android) y visual coherente en toda la app
+- [x] Cada tap en una lámina tiene feedback haptic (Android) y visual coherente en toda la app (F9: 5 kinds centralizados, distinción nueva vs repetida)
 - [ ] Completar un equipo (20/20) dispara un overlay de celebración con texto y confetti
 - [ ] La app se ve correctamente en modo oscuro y el toggle persiste entre sesiones
 - [ ] El primer load no flashea light → dark

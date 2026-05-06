@@ -7,6 +7,7 @@ import { incrementCount } from '@/db/mutations';
 import ProgressBar from '@/components/ProgressBar';
 import FlagIcon from '@/components/FlagIcon';
 import StickerChip from '@/components/StickerChip';
+import { feedback } from '@/lib/feedback';
 import StickerDetail from '@/components/StickerDetail';
 import FilterChips, { type FilterValue } from '@/components/FilterChips';
 import { useSessionStoragePref } from '@/hooks/useSessionStoragePref';
@@ -58,16 +59,11 @@ export default function TeamPage() {
       : 0;
   const total = sortedStickers?.length ?? 20;
 
-  function vibrate() {
-    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      navigator.vibrate(10);
-    }
-  }
-
   function handleTap(sticker: Sticker) {
     const entry = collection?.get(sticker.id);
-    vibrate();
-    if (!entry || entry.count === 0) {
+    const isFirstTap = !entry || entry.count === 0;
+    feedback({ kind: isFirstTap ? 'newOwned' : 'tap' });
+    if (isFirstTap) {
       void incrementCount(sticker.id);
     } else {
       setActiveStickerId(sticker.id);
