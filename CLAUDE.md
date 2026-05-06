@@ -130,6 +130,17 @@ El usuario identifica láminas por **número/ID**, no por nombre del jugador (ig
 - Commits atómicos por sub-feature (F1, F2, ...)
 - Ramas `feat/<feature>` para cambios no triviales
 
+## MCPs disponibles
+
+Hay 4 MCPs configurados para este proyecto. Úsalos a demanda cuando aporten valor; no son obligatorios.
+
+- **context7** — Antes de escribir código con APIs de Tailwind v4, Dexie, vite-plugin-pwa, React 19, React Router v7. La sintaxis de Tailwind v4 CSS-first y `@theme inline` no está bien cubierta en training data; preferir context7 sobre asunciones.
+- **playwright** — Validar el flujo crítico (búsqueda → tap → siguiente) en viewport móvil 380×800. Probar instalabilidad PWA y comportamiento offline tras `npm run build && npm run preview`.
+- **firebase** — Deploy a Firebase Hosting (`firebase_init`, `firebase_get_project`, `firebase_get_sdk_config`). El proyecto NO usa Auth/Firestore/Storage — ignorar esos tools.
+- **chrome-devtools** — Auditorías Lighthouse (`lighthouse_audit`) para validar score PWA, manifest y service worker. Performance traces en mobile cuando el grid de 20 láminas se vea lento.
+
+Configuración en [.mcp.json](.mcp.json) (project-scoped) y heredada de user scope para context7/playwright.
+
 ## Gotchas
 
 - **`useLiveQuery` requiere import específico**: `import { useLiveQuery } from 'dexie-react-hooks'`, no de `dexie`. La integración React vive en un paquete separado.
