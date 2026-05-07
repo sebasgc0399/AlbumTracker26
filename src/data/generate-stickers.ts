@@ -25,9 +25,9 @@ interface Sticker {
 //     y no como "FWC 0" o similar.
 //   - Slots FWC1..FWC8: las 8 láminas con prefijo "FWC" en el álbum.
 //
-// Notar que NO existe FWC9 en el álbum físico — la SPEC inicial asumió 9
-// FWCs y eso era incorrecto. Las 3 mascotas (Maple/Zayu/Clutch) son UNA sola
-// lámina ("Mascotas Oficiales"), no tres.
+// FWC9 NO está en intro — pertenece al Museo FIFA (es la primera lámina del
+// museo, "Foto del equipo (Italia 1934)"). Las 3 mascotas (Maple/Zayu/Clutch)
+// son UNA sola lámina ("Mascotas Oficiales"), no tres.
 interface IntroSlot {
   id: string; // p.ej. "00", "FWC1"
   team: string; // "" para 00, "FWC" para el resto
@@ -36,8 +36,8 @@ interface IntroSlot {
 
 const INTRO_SLOTS: readonly IntroSlot[] = [
   { id: "00", team: "", name: "Panini" },
-  { id: "FWC1", team: "FWC", name: "Emblema Oficial" },
-  { id: "FWC2", team: "FWC", name: "Emblema Oficial" },
+  { id: "FWC1", team: "FWC", name: "Emblema Oficial 1/2" },
+  { id: "FWC2", team: "FWC", name: "Emblema Oficial 2/2" },
   { id: "FWC3", team: "FWC", name: "Mascotas Oficiales" },
   { id: "FWC4", team: "FWC", name: "Eslogan Oficial" },
   { id: "FWC5", team: "FWC", name: "Balón Oficial Trionda" },
@@ -46,18 +46,25 @@ const INTRO_SLOTS: readonly IntroSlot[] = [
   { id: "FWC8", team: "FWC", name: "Anfitrión Estados Unidos" },
 ];
 
+// Sección Museo FIFA del álbum Panini Mundial 2026 (edición Colombia).
+// Confirmado contra el álbum físico + app oficial Panini: 11 láminas con
+// IDs FWC9..FWC19 (no FWC10..FWC20 como asumía la SPEC inicial). Cada slot
+// es una foto del equipo campeón con formato "Foto del equipo (País Año)".
+//
+// El subset de campeones NO es uno por edición: Panini eligió 11 finales
+// específicas, no las 22 ediciones del Mundial. El orden es cronológico.
 const MUSEUM_NAMES: readonly string[] = [
-  "Campeón 1930 - Uruguay",
-  "Campeón 1934 - Italia",
-  "Campeón 1950 - Uruguay",
-  "Campeón 1970 - Brasil",
-  "Campeón 1974 - Alemania",
-  "Campeón 1978 - Argentina",
-  "Campeón 1986 - Argentina",
-  "Campeón 1998 - Francia",
-  "Campeón 2010 - España",
-  "Campeón 2018 - Francia",
-  "Campeón 2022 - Argentina",
+  "Foto del equipo (Italia 1934)",
+  "Foto del equipo (Uruguay 1950)",
+  "Foto del equipo (Alemania Occidental 1954)",
+  "Foto del equipo (Brasil 1962)",
+  "Foto del equipo (Alemania Occidental 1974)",
+  "Foto del equipo (Argentina 1986)",
+  "Foto del equipo (Brasil 1994)",
+  "Foto del equipo (Brasil 2002)",
+  "Foto del equipo (Italia 2006)",
+  "Foto del equipo (Alemania 2014)",
+  "Foto del equipo (Argentina 2022)",
 ];
 
 function buildIntro(): Sticker[] {
@@ -80,7 +87,7 @@ function buildIntro(): Sticker[] {
 function buildMuseum(): Sticker[] {
   return MUSEUM_NAMES.map((name, idx) => {
     const position = idx + 1;
-    const number = position + 9;
+    const number = position + 8;
     const id = `FWC${number}`;
     return {
       id,

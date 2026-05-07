@@ -104,3 +104,37 @@ db.version(5)
     await stickersTable.clear();
     await stickersTable.bulkAdd(stickersData as Sticker[]);
   });
+
+// Versión 6: catálogo Museo FIFA corregido contra el álbum físico + intro
+// con emblemas distinguibles.
+//   - Museo, rango: FWC10..FWC20 → FWC9..FWC19. La SPEC inicial asumió que
+//     el museo empezaba en FWC10 porque pensó que FWC9 era parte de intro;
+//     en realidad intro va 00 + FWC1..FWC8 y FWC9 abre el museo.
+//   - Museo, subset de campeones: solo coincidía 4/11 con la app oficial
+//     Panini. Reemplazado por el subset real (Italia 1934, Uruguay 1950,
+//     Alemania Occidental 1954, Brasil 1962, Alemania Occidental 1974,
+//     Argentina 1986, Brasil 1994, Brasil 2002, Italia 2006, Alemania 2014,
+//     Argentina 2022).
+//   - Museo, formato del nombre: de "Campeón {Año} - {País}" a "Foto del
+//     equipo ({País} {Año})" para reflejar lo que rotula el álbum (son fotos
+//     del equipo campeón, no medallas/trofeos).
+//   - Intro, FWC1/FWC2: ambos eran "Emblema Oficial" (indistinguibles en
+//     UI). El álbum los numera 1/2 y 2/2 — actualizado a "Emblema Oficial 1/2"
+//     y "Emblema Oficial 2/2".
+//
+// Misma estrategia que v3..v5: re-seedear `stickers`. La tabla `collection`
+// queda intacta — entries existentes en FWC10..FWC19 cambian de significado
+// (apuntan ahora a campeones distintos) y FWC20 desaparece (entries huérfanas
+// no se renderizan). Aceptable porque el rango y el subset anteriores eran
+// incorrectos: cualquier progreso previo en el museo era ya semánticamente
+// inválido.
+db.version(6)
+  .stores({
+    stickers: 'id, team, group, section, type',
+    collection: 'stickerId',
+  })
+  .upgrade(async (tx) => {
+    const stickersTable = tx.table<Sticker>('stickers');
+    await stickersTable.clear();
+    await stickersTable.bulkAdd(stickersData as Sticker[]);
+  });

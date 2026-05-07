@@ -13,7 +13,7 @@
   {
     "id": "FWC1",
     "number": "FWC1",
-    "name": "Emblema Oficial",
+    "name": "Emblema Oficial 1/2",
     "team": "FWC",
     "teamName": "Introducción",
     "group": "special",
@@ -24,7 +24,7 @@
   {
     "id": "FWC2",
     "number": "FWC2",
-    "name": "Emblema Oficial",
+    "name": "Emblema Oficial 2/2",
     "team": "FWC",
     "teamName": "Introducción",
     "group": "special",
@@ -99,9 +99,9 @@
     "position": 8
   },
   {
-    "id": "FWC10",
-    "number": "FWC10",
-    "name": "Campeón 1930 - Uruguay",
+    "id": "FWC9",
+    "number": "FWC9",
+    "name": "Foto del equipo (Italia 1934)",
     "team": "FWC",
     "teamName": "Museo FIFA",
     "group": "special",
@@ -110,9 +110,9 @@
     "position": 1
   },
   {
-    "id": "FWC11",
-    "number": "FWC11",
-    "name": "Campeón 1934 - Italia",
+    "id": "FWC10",
+    "number": "FWC10",
+    "name": "Foto del equipo (Uruguay 1950)",
     "team": "FWC",
     "teamName": "Museo FIFA",
     "group": "special",
@@ -121,9 +121,9 @@
     "position": 2
   },
   {
-    "id": "FWC12",
-    "number": "FWC12",
-    "name": "Campeón 1950 - Uruguay",
+    "id": "FWC11",
+    "number": "FWC11",
+    "name": "Foto del equipo (Alemania Occidental 1954)",
     "team": "FWC",
     "teamName": "Museo FIFA",
     "group": "special",
@@ -132,9 +132,9 @@
     "position": 3
   },
   {
-    "id": "FWC13",
-    "number": "FWC13",
-    "name": "Campeón 1970 - Brasil",
+    "id": "FWC12",
+    "number": "FWC12",
+    "name": "Foto del equipo (Brasil 1962)",
     "team": "FWC",
     "teamName": "Museo FIFA",
     "group": "special",
@@ -143,9 +143,9 @@
     "position": 4
   },
   {
-    "id": "FWC14",
-    "number": "FWC14",
-    "name": "Campeón 1974 - Alemania",
+    "id": "FWC13",
+    "number": "FWC13",
+    "name": "Foto del equipo (Alemania Occidental 1974)",
     "team": "FWC",
     "teamName": "Museo FIFA",
     "group": "special",
@@ -154,9 +154,9 @@
     "position": 5
   },
   {
-    "id": "FWC15",
-    "number": "FWC15",
-    "name": "Campeón 1978 - Argentina",
+    "id": "FWC14",
+    "number": "FWC14",
+    "name": "Foto del equipo (Argentina 1986)",
     "team": "FWC",
     "teamName": "Museo FIFA",
     "group": "special",
@@ -165,9 +165,9 @@
     "position": 6
   },
   {
-    "id": "FWC16",
-    "number": "FWC16",
-    "name": "Campeón 1986 - Argentina",
+    "id": "FWC15",
+    "number": "FWC15",
+    "name": "Foto del equipo (Brasil 1994)",
     "team": "FWC",
     "teamName": "Museo FIFA",
     "group": "special",
@@ -176,9 +176,9 @@
     "position": 7
   },
   {
-    "id": "FWC17",
-    "number": "FWC17",
-    "name": "Campeón 1998 - Francia",
+    "id": "FWC16",
+    "number": "FWC16",
+    "name": "Foto del equipo (Brasil 2002)",
     "team": "FWC",
     "teamName": "Museo FIFA",
     "group": "special",
@@ -187,9 +187,9 @@
     "position": 8
   },
   {
-    "id": "FWC18",
-    "number": "FWC18",
-    "name": "Campeón 2010 - España",
+    "id": "FWC17",
+    "number": "FWC17",
+    "name": "Foto del equipo (Italia 2006)",
     "team": "FWC",
     "teamName": "Museo FIFA",
     "group": "special",
@@ -198,9 +198,9 @@
     "position": 9
   },
   {
-    "id": "FWC19",
-    "number": "FWC19",
-    "name": "Campeón 2018 - Francia",
+    "id": "FWC18",
+    "number": "FWC18",
+    "name": "Foto del equipo (Alemania 2014)",
     "team": "FWC",
     "teamName": "Museo FIFA",
     "group": "special",
@@ -209,9 +209,9 @@
     "position": 10
   },
   {
-    "id": "FWC20",
-    "number": "FWC20",
-    "name": "Campeón 2022 - Argentina",
+    "id": "FWC19",
+    "number": "FWC19",
+    "name": "Foto del equipo (Argentina 2022)",
     "team": "FWC",
     "teamName": "Museo FIFA",
     "group": "special",
