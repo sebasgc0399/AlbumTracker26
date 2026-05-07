@@ -138,3 +138,30 @@ db.version(6)
     await stickersTable.clear();
     await stickersTable.bulkAdd(stickersData as Sticker[]);
   });
+
+// Versión 7: correcciones de nombres de jugadores tras validación contra el
+// álbum físico (sesión 2026-05-06, 8 países revisados: PAN, NOR, TUR, SWE,
+// POR, CZE, MAR, ALG = 144 jugadores verificados manualmente).
+//   - SWE16 "Roony Bardghi" → "Roony Bardghji" (la app omitía la J)
+//   - MAR15 "Ismaël Saibari" → "Ismael Saibari" (sin diéresis francesa, así
+//     lo imprime el álbum para este nombre específico)
+//   - ALG6 "Mohamed Amine" → "Mohamed Amine Tougai" (apellido faltante)
+//   - ALG15 "Por confirmar" → "Riyad Mahrez" (no era slot quemado, Panini sí
+//     lo asignó al capitán argelino)
+//   - ALG17 "Anis Hadj" → "Anis Hadj Moussa" (apellido truncado)
+//
+// Misma estrategia que v3..v6: re-seedear `stickers`. La tabla `collection`
+// queda intacta — los IDs no cambian, solo el nombre asociado a cada sticker.
+// Si el usuario tenía marcadas SWE16/MAR15/ALG6/ALG15/ALG17, el progreso se
+// preserva (el "tengo esa lámina" sigue siendo válido aunque el nombre
+// mostrado sea distinto).
+db.version(7)
+  .stores({
+    stickers: 'id, team, group, section, type',
+    collection: 'stickerId',
+  })
+  .upgrade(async (tx) => {
+    const stickersTable = tx.table<Sticker>('stickers');
+    await stickersTable.clear();
+    await stickersTable.bulkAdd(stickersData as Sticker[]);
+  });

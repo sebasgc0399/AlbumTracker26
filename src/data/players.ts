@@ -10,7 +10,7 @@
 //
 // Las 48 selecciones del álbum confirmadas contra app oficial Panini Mundial 2026
 // (cruzada también contra el álbum físico para Francia y Colombia).
-// Único slot sin nombre asignado por Panini: ALG15 ("Por confirmar").
+// Todos los 864 slots tienen jugador asignado — no hay slots sin nombre.
 
 export const PLAYERS: Record<string, readonly string[]> = {
   // Group A
@@ -211,7 +211,7 @@ export const PLAYERS: Record<string, readonly string[]> = {
     "Azzedine Ounahi",
     "Eliesse Ben Seghir",
     "Bilal El Khannouss",
-    "Ismaël Saibari",
+    "Ismael Saibari",
     "Youssef En-Nesyri",
     "Abde Ezzalzouli",
     "Soufiane Rahimi",
@@ -478,7 +478,7 @@ export const PLAYERS: Record<string, readonly string[]> = {
     "Mattias Svanberg",
     "Daniel Svensson",
     "Ken Sema",
-    "Roony Bardghi",
+    "Roony Bardghji",
     "Dejan Kulusevski",
     "Anthony Elanga",
     "Alexander Isak",
@@ -777,7 +777,7 @@ export const PLAYERS: Record<string, readonly string[]> = {
     "Ramy Bensebaini",
     "Youcef Atal",
     "Rayan Aït-Nouri",
-    "Mohamed Amine",
+    "Mohamed Amine Tougai",
     "Aïssa Mandi",
     "Ismaël Bennacer",
     "Houssem Aouar",
@@ -785,9 +785,9 @@ export const PLAYERS: Record<string, readonly string[]> = {
     "Ramiz Zerrouki",
     "Nabil Bentaleb",
     "Farès Chaïbi",
-    "Por confirmar",
+    "Riyad Mahrez",
     "Saïd Benrahma",
-    "Anis Hadj",
+    "Anis Hadj Moussa",
     "Amine Gouiri",
     "Baghdad Bounedjah",
     "Mohammed Amoura",

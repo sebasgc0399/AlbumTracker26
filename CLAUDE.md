@@ -178,26 +178,12 @@ Formato: `{ID}: "{lo que tengo guardado}" — sospecha "{alternativa}"`
 - [ ] **GHA19**: "Osman Buhari" — sospecha "Osman Bukari" (la app dice Buhari, mi instinto dice Bukari, real conocido)
 - [ ] **JPN3**: "Henry Heroki Mochizuki" — la app cortaba a "Henry Heroki" (verificar si el álbum lleva el apellido completo)
 - [ ] **USA15**: "Malik Tillman" — sospecha "Malim Tillman" (la app dice Malim)
-- [ ] **POR8**: "Gonçalo Inácio" — la app dice "Gonzalo Inacio" (verificar tildes y Ç vs Z)
-- [ ] **POR18**: "Gonçalo Ramos" — la app dice "Gonzalo Ramos" (mismo)
 - [ ] **EGY20**: "Omar Marmoush" — la app dice "Omar Marsmoush" (verificar)
 - [ ] **CUW7**: "Shurandy Sambo" — la app dice "Shurandy Shambo"
 - [ ] **CUW9**: "Godfried Roemeratoe" — la app dice "Godfriend"
-- [ ] **MAR7**: "Jawad El Yamiq" — la app dice "Jawad El Yamio"
-- [ ] **MAR20**: "Ayoub El Kaabi" — la app dice "Ayoub El Kasbi"
-- [ ] **PAN8**: "César Blackman" — la app dice "Cesar Bllackman" (doble L sospechosa)
-- [ ] **PAN14**: "Ismael Díaz" — la app dice "Ismael dlAZ" (OCR severo)
-- [ ] **PAN17**: "José Luis Rodríguez" — la app dice "Jose Luiz Rodriguez" (verificar Luis vs Luiz)
 - [ ] **SEN16**: "Iliman Ndiaye" — la app dice "Liman Ndiaye"
 - [ ] **SCO18**: "Lyndon Dykes" — la app dice "Lyndon Dykus" en una vista y "Dykes" en otra
 - [ ] **SCO20**: "Ben Cannon Doak" — verificar (el real es solo "Ben Doak")
-- [ ] **SWE14**: "Roony Bardghi" — la app dice "Roony Bardhji"
-- [ ] **SWE20**: "Viktor Gyökeres" — la app dice "Viktor Cyokeres" (typo OCR claro, confirmar diéresis del álbum)
 - [ ] **KOR**: confirmar orden — quedó como "given-name family-name" (Heung-min Son), no Korean style (Son Heung-min)
-- [ ] **CZE**: confirmar todos los háčeks (Matěj Kovář, Tomáš Souček, Václav Černý, etc.) — la app no los muestra
-- [ ] **TUR**: confirmar diacríticos turcos (Çakır, Çağlar, Çalhanoğlu, etc.) — la app no los muestra
-- [ ] **NOR**: confirmar letras nórdicas (Ørjan, Ødegaard, Sørloth, Møller) — la app no las muestra
 
 Procedimiento: el usuario va pegando láminas o consulta el álbum, manda captura/foto del sticker físico con código visible, yo (o futura sesión) compara contra `players.ts` y, si coincide o se corrige, sacamos el item de esta lista. Si todos quedan limpios, esta sección entera se borra.
-
-Slot oficial sin nombre asignado por Panini (no es duda — confirmado): **ALG15** = "Por confirmar".
