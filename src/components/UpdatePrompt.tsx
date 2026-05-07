@@ -2,13 +2,25 @@ import { useEffect, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 const OFFLINE_VISIBLE_MS = 3_000;
+// Polling de updates cada 1h para sesiones largas. La detección por defecto
+// solo dispara al cargar la app y al volver del background, así que si el
+// usuario deja la PWA abierta horas y deployamos, no se entera hasta que
+// pierda foco. 1h es suficiente para esta app (sesiones cortas, deploys raros).
+const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000;
 
 export default function UpdatePrompt() {
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     offlineReady: [offlineReady, setOfflineReady],
     updateServiceWorker,
-  } = useRegisterSW({});
+  } = useRegisterSW({
+    onRegisteredSW(_swUrl, registration) {
+      if (!registration) return;
+      window.setInterval(() => {
+        void registration.update();
+      }, UPDATE_CHECK_INTERVAL_MS);
+    },
+  });
 
   const [updating, setUpdating] = useState(false);
 
