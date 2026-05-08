@@ -59,11 +59,29 @@ export default function SearchPage() {
   const matches = useMemo<Sticker[]>(() => {
     if (!sortedStickers || trimmed.length === 0) return [];
     const needle = normalize(trimmed);
-    return sortedStickers.filter(
-      (sticker) =>
-        sticker.id.toLowerCase().includes(needle) ||
-        normalize(sticker.name).includes(needle),
-    );
+
+    // Score por relevancia: matches de código exacto primero, luego prefijo
+    // de código, luego substring de código, después matches de nombre.
+    // Esto evita que tipear "COL" muestre "Nicolás Otamendi" antes que COL1
+    // — el código de equipo es la pista más usada al abrir un sobre.
+    const scored: { sticker: Sticker; score: number }[] = [];
+    for (const sticker of sortedStickers) {
+      const idLower = sticker.id.toLowerCase();
+      const nameNorm = normalize(sticker.name);
+      let score: number;
+      if (idLower === needle) score = 0;
+      else if (idLower.startsWith(needle)) score = 1;
+      else if (idLower.includes(needle)) score = 2;
+      else if (nameNorm.startsWith(needle)) score = 3;
+      else if (nameNorm.includes(needle)) score = 4;
+      else continue;
+      scored.push({ sticker, score });
+    }
+
+    // Stable sort: orden preexistente (team + position) se mantiene dentro
+    // del mismo score gracias a Array.prototype.sort estable en V8.
+    scored.sort((a, b) => a.score - b.score);
+    return scored.map((s) => s.sticker);
   }, [sortedStickers, trimmed]);
 
   const visible = matches.slice(0, MAX_VISIBLE);

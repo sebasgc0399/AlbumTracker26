@@ -57,6 +57,13 @@ export default function TeamPage() {
           return entry && entry.count > 0 ? acc + 1 : acc;
         }, 0)
       : 0;
+  const duplicatesCount =
+    sortedStickers && collection
+      ? sortedStickers.reduce((acc, sticker) => {
+          const entry = collection.get(sticker.id);
+          return entry && entry.count >= 2 ? acc + (entry.count - 1) : acc;
+        }, 0)
+      : 0;
   const total = sortedStickers?.length ?? 20;
 
   function handleTap(sticker: Sticker) {
@@ -100,7 +107,18 @@ export default function TeamPage() {
               <h1 className="truncate text-lg font-bold text-foreground">
                 {team.name}
               </h1>
-              <p className="text-xs text-muted-foreground">Grupo {team.group}</p>
+              <p className="text-xs text-muted-foreground">
+                Grupo {team.group}
+                {duplicatesCount > 0 && (
+                  <>
+                    {' · '}
+                    <span className="font-semibold text-foreground">
+                      {duplicatesCount}
+                    </span>{' '}
+                    repetida{duplicatesCount === 1 ? '' : 's'}
+                  </>
+                )}
+              </p>
             </div>
             <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
               {ownedCount}/{total}

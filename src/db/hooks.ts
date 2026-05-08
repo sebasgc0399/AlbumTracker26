@@ -96,6 +96,7 @@ export interface MissingTeamData {
 
 export function useMissingByTeam(opts: {
   almostOnly: boolean;
+  hideCC?: boolean;
 }): Map<string, MissingTeamData> | undefined {
   const stickers = useStickers();
   const collection = useCollection();
@@ -103,9 +104,11 @@ export function useMissingByTeam(opts: {
   if (!stickers || !collection) return undefined;
 
   // 1) Total stickers per teamName from the catalog (20 normal teams,
-  //    9 intro, 11 museum, 12 Coca-Cola).
+  //    9 intro, 11 museum, 12 Coca-Cola). El total se calcula sobre el
+  //    catálogo filtrado por `hideCC` para que "X de Y" tenga sentido.
   const totalsByTeam = new Map<string, number>();
   for (const sticker of stickers) {
+    if (opts.hideCC && sticker.team === 'CC') continue;
     totalsByTeam.set(
       sticker.teamName,
       (totalsByTeam.get(sticker.teamName) ?? 0) + 1,
@@ -116,6 +119,7 @@ export function useMissingByTeam(opts: {
   //    inside each bucket (stickers come out of useStickers() in id order).
   const buckets = new Map<string, MissingEntry[]>();
   for (const sticker of stickers) {
+    if (opts.hideCC && sticker.team === 'CC') continue;
     const entry = collection.get(sticker.id);
     if (entry && entry.count > 0) continue;
     let bucket = buckets.get(sticker.teamName);

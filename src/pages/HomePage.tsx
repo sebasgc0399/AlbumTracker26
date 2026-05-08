@@ -1,8 +1,7 @@
-import { ArrowLeftRight } from 'lucide-react';
+import { ArrowLeftRight, Share2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { TEAMS } from '@/data/teams';
 import { useCollection, useProgress } from '@/db/hooks';
-import { useLocalStoragePref } from '@/hooks/useLocalStoragePref';
 import GroupCard from '@/components/GroupCard';
 import ProgressBar from '@/components/ProgressBar';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -37,7 +36,6 @@ export default function HomePage() {
   const progress = useProgress();
   const collection = useCollection();
   const navigate = useNavigate();
-  const [nickname, setNickname] = useLocalStoragePref<string>('nickname', '');
 
   return (
     <div className="min-h-screen bg-background pb-20 text-foreground">
@@ -124,6 +122,33 @@ export default function HomePage() {
           </button>
         </section>
 
+        {progress !== undefined && progress.duplicates > 0 && (
+          <section className="mb-6">
+            <Link
+              to="/duplicates"
+              className="flex w-full items-center gap-3 rounded-xl border border-border bg-background px-4 py-4 text-left text-foreground shadow-sm transition-colors active:bg-muted"
+            >
+              <Share2
+                aria-hidden="true"
+                strokeWidth={2}
+                className="h-7 w-7 shrink-0 text-primary"
+              />
+              <div className="flex-1">
+                <h3 className="text-base font-bold">
+                  <span className="tabular-nums">{progress.duplicates}</span>{' '}
+                  repetida{progress.duplicates === 1 ? '' : 's'} para cambiar
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Compartí tu lista por WhatsApp o link
+                </p>
+              </div>
+              <span className="text-xl leading-none" aria-hidden="true">
+                →
+              </span>
+            </Link>
+          </section>
+        )}
+
         <section className="mb-6">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Grupos
@@ -179,23 +204,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="mb-6 rounded-lg border border-border bg-background p-3">
-          <label
-            htmlFor="nickname-input"
-            className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-          >
-            Tu nombre (para compartir listas)
-          </label>
-          <input
-            id="nickname-input"
-            type="text"
-            maxLength={24}
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-            placeholder="Sin nombre"
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-          />
-        </section>
       </main>
     </div>
   );

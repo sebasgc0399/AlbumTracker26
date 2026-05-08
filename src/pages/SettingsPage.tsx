@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Check } from 'lucide-react';
 import { getStoredTheme, setTheme, type Theme } from '@/lib/theme';
 import { getSoundEnabled, setSoundEnabled } from '@/lib/feedback';
+import { useLocalStoragePref } from '@/hooks/useLocalStoragePref';
 import {
   exportCollection,
   downloadBackup,
@@ -37,10 +39,23 @@ export default function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const toastIdRef = useRef(0);
 
+  // Nickname con feedback "guardado" temporal. La pref persiste en
+  // localStorage 'at26.pref.nickname' (key 'nickname' + prefijo del hook).
+  // showSaved se activa al tipear y se desactiva 1500ms después del último
+  // keystroke, para que el checkmark aparezca como confirmación efímera.
+  const [nickname, setNickname] = useLocalStoragePref<string>('nickname', '');
+  const [showSaved, setShowSaved] = useState(false);
+
   useEffect(() => {
     setThemeState(getStoredTheme());
     setSoundState(getSoundEnabled());
   }, []);
+
+  useEffect(() => {
+    if (!showSaved) return;
+    const id = window.setTimeout(() => setShowSaved(false), 1500);
+    return () => window.clearTimeout(id);
+  }, [showSaved]);
 
   function handleThemeChange(next: Theme) {
     setThemeState(next);
@@ -217,6 +232,43 @@ export default function SettingsPage() {
               className="h-5 w-5 shrink-0 accent-primary"
             />
           </label>
+        </section>
+
+        <section className="mb-6">
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Identidad
+          </h2>
+          <label
+            htmlFor="nickname-input"
+            className="mb-1 block text-xs font-semibold text-foreground"
+          >
+            Tu nombre
+          </label>
+          <div className="relative">
+            <input
+              id="nickname-input"
+              type="text"
+              maxLength={24}
+              value={nickname}
+              onChange={(e) => {
+                setNickname(e.target.value);
+                setShowSaved(true);
+              }}
+              placeholder="Sin nombre"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+            />
+            {showSaved && nickname.length > 0 && (
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-success"
+              >
+                <Check strokeWidth={3} className="h-4 w-4" />
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Aparece en los respaldos y en los links de matchmaker que generes.
+          </p>
         </section>
 
         <section className="mb-6">

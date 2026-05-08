@@ -51,7 +51,11 @@ export default function MissingPage() {
     'missing.almostOnly',
     false,
   );
-  const groups = useMissingByTeam({ almostOnly });
+  const [hideCC, setHideCC] = useLocalStoragePref<boolean>(
+    'missing.hideCC',
+    false,
+  );
+  const groups = useMissingByTeam({ almostOnly, hideCC });
 
   const isLoading = groups === undefined;
   const isEmpty = !isLoading && groups.size === 0;
@@ -101,6 +105,15 @@ export default function MissingPage() {
             Casi completos (≤{ALMOST_COMPLETE_THRESHOLD})
           </button>
         </div>
+        <label className="mt-2 inline-flex items-center gap-2 text-xs text-foreground">
+          <input
+            type="checkbox"
+            checked={hideCC}
+            onChange={(e) => setHideCC(e.target.checked)}
+            className="h-4 w-4 accent-primary"
+          />
+          Ocultar Coca-Cola
+        </label>
       </div>
 
       <main className="mx-auto max-w-md px-4 py-4">
