@@ -10,20 +10,43 @@ const FOOTER = 'Panini Mundial 2026 — generado con AT26';
 
 const TEAMS_BY_CODE = new Map(TEAMS.map((t) => [t.code, t]));
 
-function teamDisplayName(code: string): string {
-  if (code === '') return 'Introducción';
-  if (code === 'FWC') return 'FIFA';
-  if (code === 'CC') return 'Coca-Cola';
-  return TEAMS_BY_CODE.get(code)?.name ?? code;
+// Subdivision flags (Inglaterra, Escocia) usan secuencias Unicode especiales,
+// no el patrón ISO-2 estándar de regional indicators.
+const SUBDIVISION_FLAGS: Record<string, string> = {
+  'gb-eng': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+  'gb-sct': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+};
+
+function flagEmoji(flagCode: string): string {
+  const subdivision = SUBDIVISION_FLAGS[flagCode];
+  if (subdivision) return subdivision;
+  if (flagCode.length !== 2) return '';
+  return flagCode
+    .toUpperCase()
+    .split('')
+    .map((c) => String.fromCodePoint(c.charCodeAt(0) + 127397))
+    .join('');
+}
+
+// Etiqueta compacta: código de 3 letras + bandera emoji. Caso especial para
+// secciones que no son países (intro/museo FWC, Coca-Cola, lámina "00").
+function teamLabel(code: string): string {
+  if (code === '') return 'Intro';
+  if (code === 'FWC') return 'FWC 🏆';
+  if (code === 'CC') return 'CC 🥤';
+  const team = TEAMS_BY_CODE.get(code);
+  if (!team) return code;
+  const flag = flagEmoji(team.flagCode);
+  return flag ? `${code} ${flag}` : code;
 }
 
 function formatTeamLine(code: string, ids: string[]): string {
   const body = compressIdsToTokens(code, ids).join(', ');
-  const name = teamDisplayName(code);
+  const label = teamLabel(code);
   if (ids.length >= 3) {
-    return `${name}: ${body} (${ids.length})`;
+    return `${label}: ${body} (${ids.length})`;
   }
-  return `${name}: ${body}`;
+  return `${label}: ${body}`;
 }
 
 function buildSection(
@@ -32,9 +55,10 @@ function buildSection(
   total: number,
 ): string | null {
   if (total === 0) return null;
-  const teams = Array.from(byTeam.keys()).sort((a, b) =>
-    teamDisplayName(a).localeCompare(teamDisplayName(b)),
-  );
+  // Sort por código (ARG, AUS, BEL...) en vez de nombre en español. Más
+  // predecible y consistente con el formato compacto que usa el código como
+  // identificador principal.
+  const teams = Array.from(byTeam.keys()).sort((a, b) => a.localeCompare(b));
   const lines = teams.map((code) =>
     formatTeamLine(code, byTeam.get(code) ?? []),
   );
