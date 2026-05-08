@@ -63,12 +63,8 @@ export default function DuplicatesPage() {
     'duplicates.order',
     'by-team',
   );
-  const [hideCC, setHideCC] = useLocalStoragePref<boolean>(
-    'duplicates.hideCC',
-    false,
-  );
 
-  const groups = useDuplicatesByTeam({ hideCC });
+  const groups = useDuplicatesByTeam();
 
   // El frozen order se reinicia al cambiar a "Por equipo" (no aplica) y se
   // captura la primera vez que groups está disponible en modo "Más repetidas".
@@ -211,16 +207,6 @@ export default function DuplicatesPage() {
                 Más repetidas
               </button>
             </div>
-
-            <label className="inline-flex items-center gap-2 text-xs text-foreground">
-              <input
-                type="checkbox"
-                checked={hideCC}
-                onChange={(e) => setHideCC(e.target.checked)}
-                className="h-4 w-4 accent-primary"
-              />
-              Ocultar Coca-Cola
-            </label>
           </div>
           {!isLoading && !isEmpty && (
             <div className="mt-2 flex justify-end gap-2">
