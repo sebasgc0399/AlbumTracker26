@@ -1,6 +1,5 @@
 import { useMissingByTeam } from '@/db/hooks';
 import { useLocalStoragePref } from '@/hooks/useLocalStoragePref';
-import { ALMOST_COMPLETE_THRESHOLD } from '@/utils/constants';
 import { flagInfoForTeamName } from '@/utils/flagFor';
 import MissingRow from '@/components/MissingRow';
 import ProgressBar from '@/components/ProgressBar';
@@ -98,7 +97,7 @@ export default function MissingPage() {
                 : 'text-muted-foreground'
             }`}
           >
-            Casi completos (≤{ALMOST_COMPLETE_THRESHOLD})
+            Casi completos
           </button>
         </div>
       </div>
