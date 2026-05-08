@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { ChevronsDownUp, ChevronsUpDown, Inbox } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ChevronsDownUp, ChevronsUpDown, Inbox, RefreshCw } from 'lucide-react';
 import DuplicateRow from '@/components/DuplicateRow';
 import ShareImageButton from '@/components/ShareImageButton';
 import ShareLinkButton from '@/components/ShareLinkButton';
@@ -11,6 +11,16 @@ import { useLocalStoragePref } from '@/hooks/useLocalStoragePref';
 import { flagInfoForTeamName } from '@/utils/flagFor';
 
 type OrderMode = 'by-team' | 'most-duplicates';
+
+// Snapshot de orden congelado para "Más repetidas". El orden se captura una
+// vez al entrar al modo y se aplica como ranking estable. Sin esto, cada
+// click en +/- reordena la lista en el momento (un sticker que sube su
+// count salta a una posición más arriba), lo que rompe la posición visual
+// del usuario que está editando varios seguidos.
+interface FrozenOrder {
+  teams: string[]; // teamNames en orden de mayor a menor sumExtra
+  entries: Map<string, string[]>; // teamName → sticker IDs en orden
+}
 
 function teamFlagSlot(teamName: string) {
   return (
@@ -28,6 +38,26 @@ function sumExtra(entries: DuplicateEntry[]): number {
   return total;
 }
 
+// Captura el orden "más repetidas primero" del estado actual de groups.
+// Usado al entrar al modo y al click manual del botón "Reordenar".
+function snapshotMostDuplicatesOrder(
+  groups: Map<string, DuplicateEntry[]>,
+): FrozenOrder {
+  const arr = Array.from(groups.entries()).map(
+    ([team, entries]) => [team, [...entries]] as [string, DuplicateEntry[]],
+  );
+  for (const [, entries] of arr) {
+    entries.sort((a, b) => b.extra - a.extra);
+  }
+  arr.sort(([, a], [, b]) => sumExtra(b) - sumExtra(a));
+  return {
+    teams: arr.map(([t]) => t),
+    entries: new Map(
+      arr.map(([t, es]) => [t, es.map((e) => e.sticker.id)]),
+    ),
+  };
+}
+
 export default function DuplicatesPage() {
   const [order, setOrder] = useLocalStoragePref<OrderMode>(
     'duplicates.order',
@@ -40,17 +70,62 @@ export default function DuplicatesPage() {
 
   const groups = useDuplicatesByTeam({ hideCC });
 
+  // El frozen order se reinicia al cambiar a "Por equipo" (no aplica) y se
+  // captura la primera vez que groups está disponible en modo "Más repetidas".
+  // Click en "Reordenar" lo recaptura con los counts actuales.
+  const [frozenOrder, setFrozenOrder] = useState<FrozenOrder | null>(null);
+
+  useEffect(() => {
+    if (order !== 'most-duplicates') {
+      if (frozenOrder !== null) setFrozenOrder(null);
+      return;
+    }
+    if (frozenOrder === null && groups !== undefined) {
+      setFrozenOrder(snapshotMostDuplicatesOrder(groups));
+    }
+  }, [order, groups, frozenOrder]);
+
+  const reorderNow = useCallback(() => {
+    if (!groups) return;
+    setFrozenOrder(snapshotMostDuplicatesOrder(groups));
+  }, [groups]);
+
   const orderedGroups = useMemo<[string, DuplicateEntry[]][] | undefined>(() => {
     if (!groups) return undefined;
     const arr = Array.from(groups.entries());
     if (order === 'most-duplicates') {
-      for (const [, entries] of arr) {
-        entries.sort((a, b) => b.extra - a.extra);
+      if (frozenOrder) {
+        // Aplicar ranking congelado. Items/equipos nuevos (no en el snapshot)
+        // van al final con rank Infinity.
+        const teamRank = new Map(frozenOrder.teams.map((t, i) => [t, i]));
+        arr.sort(
+          ([a], [b]) =>
+            (teamRank.get(a) ?? Infinity) - (teamRank.get(b) ?? Infinity),
+        );
+        for (const [team, entries] of arr) {
+          const ids = frozenOrder.entries.get(team);
+          if (ids) {
+            const entryRank = new Map(ids.map((id, i) => [id, i]));
+            entries.sort(
+              (a, b) =>
+                (entryRank.get(a.sticker.id) ?? Infinity) -
+                (entryRank.get(b.sticker.id) ?? Infinity),
+            );
+          } else {
+            entries.sort((a, b) => b.extra - a.extra);
+          }
+        }
+      } else {
+        // Fallback (groups todavía no cargó cuando entró el modo): orden
+        // dinámico hasta que useEffect capture el snapshot.
+        for (const [, entries] of arr) {
+          entries.sort((a, b) => b.extra - a.extra);
+        }
+        arr.sort(([, a], [, b]) => sumExtra(b) - sumExtra(a));
       }
-      arr.sort(([, a], [, b]) => sumExtra(b) - sumExtra(a));
     }
     return arr;
-  }, [groups, order]);
+  }, [groups, order, frozenOrder]);
 
   const totalGlobal = useMemo(() => {
     if (!orderedGroups) return 0;
@@ -148,7 +223,17 @@ export default function DuplicatesPage() {
             </label>
           </div>
           {!isLoading && !isEmpty && (
-            <div className="mt-2 flex justify-end">
+            <div className="mt-2 flex justify-end gap-2">
+              {order === 'most-duplicates' && (
+                <button
+                  type="button"
+                  onClick={reorderNow}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground transition-colors active:bg-muted"
+                >
+                  <RefreshCw aria-hidden="true" className="h-3.5 w-3.5" />
+                  <span>Reordenar</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={toggleAll}
