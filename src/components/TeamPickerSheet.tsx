@@ -20,6 +20,7 @@ export default function TeamPickerSheet({
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const openerRef = useRef<Element | null>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [query, setQuery] = useState('');
 
@@ -46,6 +47,28 @@ export default function TeamPickerSheet({
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  // visualViewport: en mobile el teclado virtual no reduce window.innerHeight
+  // por defecto. Detectamos su altura y elevamos el sheet por encima vía CSS
+  // var --keyboard-offset. Sin esto la lista queda físicamente tapada por el
+  // teclado en iOS Safari y Android Chrome.
+  useEffect(() => {
+    if (!isOpen) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => {
+      const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      sheetRef.current?.style.setProperty('--keyboard-offset', `${offset}px`);
+    };
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    update();
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+      sheetRef.current?.style.removeProperty('--keyboard-offset');
+    };
   }, [isOpen]);
 
   function handleClose() {
@@ -115,7 +138,9 @@ export default function TeamPickerSheet({
       />
 
       <div
-        className={`absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col rounded-t-2xl bg-background shadow-xl transition-transform duration-200 ease-out ${
+        ref={sheetRef}
+        style={{ bottom: 'var(--keyboard-offset, 0px)' }}
+        className={`absolute inset-x-0 flex max-h-[calc(85dvh-var(--keyboard-offset,0px))] flex-col rounded-t-2xl bg-background shadow-xl transition-transform duration-200 ease-out ${
           isVisible ? 'translate-y-0' : 'translate-y-full'
         }`}
       >

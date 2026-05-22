@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { TEAMS } from '@/data/teams';
 import { useCollection, useStickers } from '@/db/hooks';
@@ -26,8 +26,6 @@ export default function TeamPage() {
 
   const stickers = useStickers(team?.code);
   const collection = useCollection();
-  const navigate = useNavigate();
-  const location = useLocation();
 
   const [activeStickerId, setActiveStickerId] = useState<string | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
@@ -82,18 +80,6 @@ export default function TeamPage() {
     }
   }
 
-  const fallbackPath = `/group/${team.group}`;
-
-  function handleBack() {
-    // location.key === 'default' = primer entry del SPA stack (deep link, refresh,
-    // URL pegada). Sin history previo, fallback al grupo del equipo.
-    if (location.key === 'default') {
-      navigate(fallbackPath, { replace: true });
-    } else {
-      navigate(-1);
-    }
-  }
-
   const activeSticker =
     activeStickerId && sortedStickers
       ? sortedStickers.find((sticker) => sticker.id === activeStickerId)
@@ -106,16 +92,15 @@ export default function TeamPage() {
       <header className="sticky top-0 z-20 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto max-w-md">
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={handleBack}
+            <Link
+              to={`/group/${team.group}`}
               aria-label={`Volver al grupo ${team.group}`}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground transition-colors active:bg-muted"
             >
               <span aria-hidden="true" className="text-xl leading-none">
                 ←
               </span>
-            </button>
+            </Link>
             <FlagIcon
               code={team.flagCode}
               alt=""
