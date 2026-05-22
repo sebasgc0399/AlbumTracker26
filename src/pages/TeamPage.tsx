@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Search } from 'lucide-react';
 import { TEAMS } from '@/data/teams';
 import { useCollection, useStickers } from '@/db/hooks';
 import type { Sticker } from '@/db/database';
@@ -10,6 +11,7 @@ import StickerChip from '@/components/StickerChip';
 import { feedback } from '@/lib/feedback';
 import StickerDetail from '@/components/StickerDetail';
 import FilterChips, { type FilterValue } from '@/components/FilterChips';
+import TeamPickerSheet from '@/components/TeamPickerSheet';
 import { useSessionStoragePref } from '@/hooks/useSessionStoragePref';
 
 // Altura aproximada del header sticky de TeamPage:
@@ -24,8 +26,11 @@ export default function TeamPage() {
 
   const stickers = useStickers(team?.code);
   const collection = useCollection();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [activeStickerId, setActiveStickerId] = useState<string | null>(null);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [filter, setFilter] = useSessionStoragePref<FilterValue>(
     `filter.team.${teamCode ?? 'unknown'}`,
     'all',
@@ -77,6 +82,18 @@ export default function TeamPage() {
     }
   }
 
+  const fallbackPath = `/group/${team.group}`;
+
+  function handleBack() {
+    // location.key === 'default' = primer entry del SPA stack (deep link, refresh,
+    // URL pegada). Sin history previo, fallback al grupo del equipo.
+    if (location.key === 'default') {
+      navigate(fallbackPath, { replace: true });
+    } else {
+      navigate(-1);
+    }
+  }
+
   const activeSticker =
     activeStickerId && sortedStickers
       ? sortedStickers.find((sticker) => sticker.id === activeStickerId)
@@ -89,15 +106,16 @@ export default function TeamPage() {
       <header className="sticky top-0 z-20 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto max-w-md">
           <div className="flex items-center gap-3">
-            <Link
-              to={`/group/${team.group}`}
+            <button
+              type="button"
+              onClick={handleBack}
               aria-label={`Volver al grupo ${team.group}`}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground transition-colors active:bg-muted"
             >
               <span aria-hidden="true" className="text-xl leading-none">
                 ←
               </span>
-            </Link>
+            </button>
             <FlagIcon
               code={team.flagCode}
               alt=""
@@ -120,6 +138,14 @@ export default function TeamPage() {
                 )}
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() => setIsPickerOpen(true)}
+              aria-label="Buscar equipo"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground transition-colors active:bg-muted"
+            >
+              <Search className="h-5 w-5" aria-hidden="true" />
+            </button>
             <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
               {ownedCount}/{total}
             </span>
@@ -165,6 +191,12 @@ export default function TeamPage() {
           onClose={() => setActiveStickerId(null)}
         />
       )}
+
+      <TeamPickerSheet
+        isOpen={isPickerOpen}
+        onClose={() => setIsPickerOpen(false)}
+        currentTeamCode={team.code}
+      />
     </div>
   );
 }

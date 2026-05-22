@@ -8,23 +8,11 @@ import { useCollection, useStickers } from '@/db/hooks';
 import { incrementAndReturn } from '@/db/mutations';
 import { feedback } from '@/lib/feedback';
 import { useBatchSession } from '@/hooks/useBatchSession';
+import { normalize } from '@/lib/normalize';
 
 const MAX_VISIBLE = 8;
 const FLASH_MS = 220;
 const SOBRE_TARGET = 7;
-
-// Letras base distintas (no diacríticos combinables) que normalize('NFD') no descompone.
-// Necesario para buscar "odegaard" → "Ødegaard", "yamal" → "Yamal", etc.
-const BASE_LETTER_MAP: Record<string, string> = {
-  ø: 'o', æ: 'ae', å: 'a', ß: 'ss', đ: 'd', ł: 'l',
-};
-
-const normalize = (s: string) =>
-  s
-    .toLowerCase()
-    .replace(/[øæåßđł]/g, (ch) => BASE_LETTER_MAP[ch] ?? ch)
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '');
 
 export default function SearchPage() {
   const stickers = useStickers();

@@ -27,8 +27,9 @@ export default function GroupCard({ groupId, collection }: GroupCardProps) {
 
   return (
     <Link
+      id={`group-card-${groupId}`}
       to={`/group/${groupId}`}
-      className="block rounded-lg border border-border bg-background p-3 transition-colors active:bg-muted"
+      className="block scroll-mt-24 rounded-lg border border-border bg-background p-3 transition-colors active:bg-muted"
     >
       <div className="mb-2 flex items-baseline justify-between">
         <h3 className="text-base font-semibold text-foreground">

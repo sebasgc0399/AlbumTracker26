@@ -1,5 +1,6 @@
+import { useEffect } from 'react';
 import { ArrowLeftRight, Share2 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { TEAMS } from '@/data/teams';
 import { useCollection, useProgress } from '@/db/hooks';
 import GroupCard from '@/components/GroupCard';
@@ -32,10 +33,29 @@ const SPECIAL_SECTIONS: readonly SpecialSection[] = [
   { id: 'cocacola', name: 'Coca-Cola', description: '14 láminas (promo)', stickerIds: range('CC', 1, 14) },
 ];
 
+interface HomeLocationState {
+  fromGroup?: string;
+}
+
 export default function HomePage() {
   const progress = useProgress();
   const collection = useCollection();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Al volver desde GroupPage via ← Volver al inicio, centrar la card del grupo
+  // visitado. El state se limpia tras leerlo para no re-scrollear en refresh.
+  useEffect(() => {
+    const state = location.state as HomeLocationState | null;
+    const fromGroup = state?.fromGroup;
+    if (!fromGroup) return;
+    const id = window.requestAnimationFrame(() => {
+      const target = document.getElementById(`group-card-${fromGroup}`);
+      target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    window.history.replaceState({}, '');
+    return () => window.cancelAnimationFrame(id);
+  }, [location.state]);
 
   return (
     <div className="min-h-screen bg-background pb-20 text-foreground">
