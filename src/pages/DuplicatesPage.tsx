@@ -8,6 +8,7 @@ import TeamFlag from '@/components/TeamFlag';
 import TeamGroupHeader from '@/components/TeamGroupHeader';
 import { useDuplicatesByTeam, type DuplicateEntry } from '@/db/hooks';
 import { useLocalStoragePref } from '@/hooks/useLocalStoragePref';
+import { compareNamesByTournament } from '@/lib/teamOrder';
 import { flagInfoForTeamName } from '@/utils/flagFor';
 
 type OrderMode = 'by-team' | 'most-duplicates';
@@ -63,6 +64,10 @@ export default function DuplicatesPage() {
     'duplicates.order',
     'by-team',
   );
+  const [byTournament, setByTournament] = useLocalStoragePref<boolean>(
+    'order.byTournament',
+    true,
+  );
 
   const groups = useDuplicatesByTeam();
 
@@ -89,6 +94,16 @@ export default function DuplicatesPage() {
   const orderedGroups = useMemo<[string, DuplicateEntry[]][] | undefined>(() => {
     if (!groups) return undefined;
     const arr = Array.from(groups.entries());
+    if (order === 'by-team') {
+      // Default torneo (Grupo A→L). Alfabético opcional. Las keys son teamName
+      // (no code), por eso compareNamesByTournament.
+      arr.sort(([a], [b]) =>
+        byTournament
+          ? compareNamesByTournament(a, b)
+          : a.localeCompare(b),
+      );
+      return arr;
+    }
     if (order === 'most-duplicates') {
       if (frozenOrder) {
         // Aplicar ranking congelado. Items/equipos nuevos (no en el snapshot)
@@ -121,7 +136,7 @@ export default function DuplicatesPage() {
       }
     }
     return arr;
-  }, [groups, order, frozenOrder]);
+  }, [groups, order, frozenOrder, byTournament]);
 
   const totalGlobal = useMemo(() => {
     if (!orderedGroups) return 0;
@@ -208,6 +223,40 @@ export default function DuplicatesPage() {
               </button>
             </div>
           </div>
+          {order === 'by-team' && (
+            <div
+              role="radiogroup"
+              aria-label="Orden dentro de Por equipo"
+              className="mt-2 inline-flex rounded-full border border-border bg-background p-0.5 text-xs"
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={byTournament}
+                onClick={() => setByTournament(true)}
+                className={`rounded-full px-3 py-1 transition-colors ${
+                  byTournament
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                Torneo
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={!byTournament}
+                onClick={() => setByTournament(false)}
+                className={`rounded-full px-3 py-1 transition-colors ${
+                  !byTournament
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                Alfabético
+              </button>
+            </div>
+          )}
           {!isLoading && !isEmpty && (
             <div className="mt-2 flex justify-end gap-2">
               {order === 'most-duplicates' && (

@@ -18,6 +18,10 @@ function isAbortError(err: unknown): boolean {
 export default function ShareListButton() {
   const lists = useTradeableLists();
   const [includeCC] = useLocalStoragePref<boolean>('share.includeCC', false);
+  const [byTournament] = useLocalStoragePref<boolean>(
+    'order.byTournament',
+    true,
+  );
   const [toast, setToast] = useState<Toast | null>(null);
 
   useEffect(() => {
@@ -28,8 +32,8 @@ export default function ShareListButton() {
 
   const text = useMemo(() => {
     if (!lists) return '';
-    return formatTradeList(lists, { includeCC });
-  }, [lists, includeCC]);
+    return formatTradeList(lists, { includeCC, byTournament });
+  }, [lists, includeCC, byTournament]);
 
   const isLoading = lists === undefined;
   const isEmpty = !isLoading && text.length === 0;

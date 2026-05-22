@@ -1,9 +1,11 @@
 import { TEAMS } from '@/data/teams';
+import { compareCodesByTournament } from '@/lib/teamOrder';
 import { compressIdsToTokens } from './compressIds';
 import type { TradeLists } from './types';
 
 export interface FormatOptions {
   includeCC: boolean;
+  byTournament: boolean;
 }
 
 const FOOTER = 'Panini Mundial 2026 — generado con AT26';
@@ -53,12 +55,14 @@ function buildSection(
   label: string,
   byTeam: Map<string, string[]>,
   total: number,
+  byTournament: boolean,
 ): string | null {
   if (total === 0) return null;
-  // Sort por código (ARG, AUS, BEL...) en vez de nombre en español. Más
-  // predecible y consistente con el formato compacto que usa el código como
-  // identificador principal.
-  const teams = Array.from(byTeam.keys()).sort((a, b) => a.localeCompare(b));
+  // Orden de torneo (default) sigue el array TEAMS (Grupo A→L); alfabético es
+  // la alternativa. Equipos no-país (CC, FWC) caen al final con MAX_SAFE_INTEGER.
+  const teams = Array.from(byTeam.keys()).sort((a, b) =>
+    byTournament ? compareCodesByTournament(a, b) : a.localeCompare(b),
+  );
   const lines = teams.map((code) =>
     formatTeamLine(code, byTeam.get(code) ?? []),
   );
@@ -98,8 +102,8 @@ export function formatTradeList(
     missTotal += 1;
   }
 
-  const cambio = buildSection('CAMBIO', dupByTeam, dupTotal);
-  const busco = buildSection('BUSCO', missByTeam, missTotal);
+  const cambio = buildSection('CAMBIO', dupByTeam, dupTotal, opts.byTournament);
+  const busco = buildSection('BUSCO', missByTeam, missTotal, opts.byTournament);
 
   if (!cambio && !busco) return '';
 

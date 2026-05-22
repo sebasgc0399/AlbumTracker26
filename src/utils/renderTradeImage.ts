@@ -1,4 +1,5 @@
 import { TEAMS } from '@/data/teams';
+import { compareCodesByTournament } from '@/lib/teamOrder';
 import { compressIdsToTokens, countIdsInToken } from './compressIds';
 import type { TradeLists } from './types';
 
@@ -41,6 +42,19 @@ function readIncludeCC(): boolean {
   }
 }
 
+// Default true: orden de torneo (Grupo A→L) coincide con la UI de /duplicates
+// y con cómo el usuario navega los grupos en Home.
+function readByTournament(): boolean {
+  if (typeof window === 'undefined') return true;
+  try {
+    const raw = window.localStorage.getItem('at26.pref.order.byTournament');
+    if (raw === null) return true;
+    return JSON.parse(raw) !== false;
+  } catch {
+    return true;
+  }
+}
+
 function naturalSortIds(ids: string[]): string[] {
   return ids
     .slice()
@@ -56,6 +70,7 @@ interface TeamGroup {
 
 function groupIdsByTeam(
   pairs: { team: string; id: string }[],
+  byTournament: boolean,
 ): TeamGroup[] {
   const map = new Map<string, string[]>();
   for (const { team, id } of pairs) {
@@ -66,7 +81,9 @@ function groupIdsByTeam(
     }
     bucket.push(id);
   }
-  const teams = Array.from(map.keys()).sort((a, b) => a.localeCompare(b));
+  const teams = Array.from(map.keys()).sort((a, b) =>
+    byTournament ? compareCodesByTournament(a, b) : a.localeCompare(b),
+  );
   return teams.map((code) => {
     const ids = naturalSortIds(map.get(code) ?? []);
     return {
@@ -312,6 +329,7 @@ export async function renderTradeImage(lists: TradeLists): Promise<Blob> {
   ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
   const includeCC = readIncludeCC();
+  const byTournament = readByTournament();
   const contentLeft = PADDING;
   const contentRight = CANVAS_W - PADDING;
   const contentWidth = contentRight - contentLeft;
@@ -329,8 +347,8 @@ export async function renderTradeImage(lists: TradeLists): Promise<Blob> {
     missPairs.push({ team: sticker.team, id: sticker.id });
   }
 
-  const dupGroups = groupIdsByTeam(dupPairs);
-  const missGroups = groupIdsByTeam(missPairs);
+  const dupGroups = groupIdsByTeam(dupPairs, byTournament);
+  const missGroups = groupIdsByTeam(missPairs, byTournament);
   const dupTotal = dupPairs.length;
   const missTotal = missPairs.length;
 
